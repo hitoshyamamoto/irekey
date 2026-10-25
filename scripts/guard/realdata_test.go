@@ -146,6 +146,11 @@ func TestRealData_MAC(t *testing.T) {
 func TestRealData_Domains(t *testing.T) {
 	checkLines(t, []lineCase{
 		{"example", "https://example.com/x", 0},
+		{"page name in an allowlisted URL's path", "https://github.com/a/docs/" + "sudo" + ".man/", 0},
+		{"page name in an example URL's path", "see https://example.com/man/visudo" + ".man and more", 0},
+		{"query and fragment", "https://github.com/x?page=" + "a" + ".man#" + "b" + ".man", 0},
+		{"real host of a URL with a path", "https://" + realDomain + "/docs/" + "sudo" + ".man/", 1},
+		{"second URL after a space", "https://github.com/x " + "https://" + realDomain, 1},
 		{"example subdomain", "registry.example.com/irekey", 0},
 		{"example net and org", "a.example.net b.example.org", 0},
 		{"reserved suffixes", "dev.example host.test x.invalid ui.localhost localhost", 0},

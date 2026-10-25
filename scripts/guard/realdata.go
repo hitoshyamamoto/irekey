@@ -508,6 +508,9 @@ func domainFinding(line string, start, end int, ctx lineContext, allow domainAll
 	if end < len(line) && (line[end] == '(' || line[end] == '[') {
 		return "" // a call or an index
 	}
+	if inURLPath(line, start) {
+		return "" // a path segment such as "sudo.man" in https://host/docs/sudo.man/
+	}
 	host := hostContext(line, start, end, name)
 	if fileExtensionTLDs[tld] && !host {
 		return ""
@@ -535,6 +538,25 @@ func intranetSuffix(name string) string {
 		}
 	}
 	return ""
+}
+
+// inURLPath reports whether the name starting at start lies in the path,
+// query or fragment of a URL: after the nearest "://" there is a "/", "?"
+// or "#" before the name, and no space, quote, bracket or angle bracket
+// in between. The host part of that URL is checked on its own, so a real
+// host is still reported; only file and page names in the path, which
+// are not hosts, are skipped. A host name embedded as a parameter value
+// (https://host/?u=other.example) is therefore not checked.
+func inURLPath(line string, start int) bool {
+	i := strings.LastIndex(line[:start], "://")
+	if i < 0 {
+		return false
+	}
+	between := line[i+3 : start]
+	if strings.ContainsAny(between, " \t\"'<>()[]") {
+		return false
+	}
+	return strings.ContainsAny(between, "/?#")
 }
 
 // hostContext reports whether the text around a name makes it a host
