@@ -82,6 +82,17 @@ Added, Changed, Deprecated, Removed, Fixed and Security, as needed.
   without a test that refers to it, when Markdown mentions an unregistered
   code, or when the registry is invalid or the generated files are stale.
 - ADR 0019 (stable error-code registry), proposed.
+- The redaction package (`internal/redact`), which keeps secrets out of
+  output and logs. Registered secrets of at least four bytes, and the
+  escaped forms they take in JSON, quoted and sanitized text, become
+  `[REDACTED]` in strings, in streamed output whatever its chunk
+  boundaries, and in `log/slog` records: the message, keys, group names
+  and values, checked in every form the stock handlers print and against
+  the secrets known when each record is logged. Overlapping secrets are
+  redacted whole. The package also escapes, in text read from devices,
+  control and format characters (bidirectional text controls among them),
+  line and paragraph separators, private-use and unassigned code points
+  and invalid UTF-8 before the text reaches a terminal.
 
 ### Changed
 
