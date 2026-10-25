@@ -208,6 +208,8 @@ No sponsors are listed yet.
 |---|---|
 | [Specification](docs/spec/masterprompt.md) | what irekey is, its safety invariants, the design and the engineering standard |
 | [Architecture decision records](docs/adr/README.md) | each decision, the options considered and the reasons |
+| [Open questions](docs/open-questions.md) | the assumptions of the design and the questions that are still open |
+| [Glossary](docs/glossary.md) | the canonical vocabulary |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | development setup, the checks and the rules for changes |
 | [GOVERNANCE.md](GOVERNANCE.md) | how features are accepted and decisions are made |
 | [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | the Contributor Covenant 2.1, which applies in every project space |

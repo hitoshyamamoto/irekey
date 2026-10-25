@@ -85,3 +85,16 @@ debian.org # Debian packages and mirrors for the lab images
 man7.org # Linux manual pages
 iana.org # IANA, source of the list of top-level domains in scripts/guard/tlds.txt, cited by ADR 0022
 home.arpa # the special-use domain itself, named where the guard rules are described (RFC 8375); names under it are still reported
+rust-lang.github.io # the Rust Reference, cited by ADR 0002
+rust-lang.org # Rust documentation, cited by ADR 0002
+mozilla.org # the Mozilla Public License text, cited by ADR 0003
+apache.org # the Apache License text, cited by ADR 0003
+gnu.org # GNU license texts, cited by ADR 0003 and ADR 0017
+nongnu.org # the quilt project, cited by ADR 0005
+yoctoproject.org # Yocto Project documentation on layers, cited by ADR 0005
+googlesource.com # the repo tool's source, cited by ADR 0006
+libssh.org # the libssh project, cited by ADR 0009
+kernel.org # Linux kernel documentation, cited by ADR 0010
+sudo.ws # sudo's manual pages, cited by ADR 0011
+sqlite.org # SQLite documentation, cited by ADR 0013
+cuelang.org # CUE documentation, cited by ADR 0014
