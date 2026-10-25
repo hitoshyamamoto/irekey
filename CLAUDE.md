@@ -88,6 +88,7 @@ go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
 go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.12   # after editing workflows
 go test ./internal/schema -update                # rewrite docs/schema-versions.txt, then review the diff
 go generate ./internal/errs                      # after editing internal/errs/codes.yaml
+go generate ./internal/execbin                   # build the executors to embed (gitignored; optional for development)
 ```
 
 `-race` needs cgo and a C compiler. CI always runs it; if the local machine
