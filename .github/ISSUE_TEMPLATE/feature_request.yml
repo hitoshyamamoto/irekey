@@ -1,0 +1,45 @@
+name: Feature proposal
+description: Propose a change. Read GOVERNANCE.md first; speculative proposals are not evaluated.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: field-case
+    attributes:
+      label: Real field case
+      description: The devices, the situation and the current friction, described concretely. Use fictional names (acme, globex, initech) instead of real customers or sites.
+    validations:
+      required: true
+  - type: dropdown
+    id: verb
+    attributes:
+      label: Verb
+      description: Which part of irekey's verb does the feature serve?
+      multiple: true
+      options:
+        - Inspect (know what each device really runs)
+        - Adjust (keep per-customer differences on top of one base)
+        - Deliver (move a tested release set to devices safely)
+    validations:
+      required: true
+  - type: textarea
+    id: basic-usage
+    attributes:
+      label: Basic usage
+      description: Does the default behavior stay the same? Is the feature opt-in? Does it still work without a configuration file?
+    validations:
+      required: true
+  - type: textarea
+    id: maintenance
+    attributes:
+      label: Maintenance
+      description: How can it be tested in CI and in the simulated device lab, without hardware? Any new dependencies, with their licenses?
+  - type: textarea
+    id: contracts
+    attributes:
+      label: Contracts affected
+      description: CLI commands and flags, `--json` output, exit and error codes, file formats, the device layout. See STABILITY.md.
+  - type: textarea
+    id: safety
+    attributes:
+      label: Operational safety
+      description: Does it do anything new on devices (write files, run commands, change services, open a port)? How is it made optional, explicit, confirmed and logged? Nothing may run permanently on a device.
