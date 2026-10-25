@@ -1,0 +1,23 @@
+# Build output
+/dist/
+/irekey
+/irekey-exec
+*.test
+
+# Executor binaries generated for embedding (go generate ./internal/execbin).
+# Only the README in that directory is tracked.
+/internal/execbin/bin/*
+!/internal/execbin/bin/README.md
+
+# Test and coverage artifacts
+*.out
+coverage.*
+
+# Editors and OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Local tooling
+.claude/
