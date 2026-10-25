@@ -134,18 +134,20 @@ jobs:
           # needs cgo.
           CGO_ENABLED: "0"
         run: |
+          # Device-side executors first. The generator builds irekey-exec for
+          # linux/amd64, linux/arm64 and linux/arm/v7 (always without cgo, with
+          # the same -trimpath and -ldflags as below, and with fixed go command
+          # settings whatever the environment holds), fails if the linux/amd64
+          # executor exceeds the 12 MiB size limit, writes the compressed
+          # executors and their manifest to internal/execbin/bin for embedding,
+          # and writes the uncompressed executors to dist/ under their release
+          # asset names.
+          go run ./internal/execbin/internal/gen -version ci -out internal/execbin/bin -dist dist
+          # The embedded set must be complete and match its manifest.
+          IREKEY_REQUIRE_EMBEDDED=1 go test -count=1 -v -run '^TestEmbedded$' ./internal/execbin
+          # Then the operator CLI. It does not link package execbin yet; once it
+          # does, building it after the generator embeds the set verified above.
           ldflags="-s -w -X github.com/hitoshyamamoto/irekey/internal/version.Version=ci"
-          # Device-side executors first, then the operator CLI.
-          for arch in amd64 arm64 arm; do
-            # GOARM selects ARMv7 for the 32-bit build and is ignored otherwise.
-            case "$arch" in
-              arm) name=armv7 goarm=7 ;;
-              *) name=$arch goarm= ;;
-            esac
-            GOOS=linux GOARCH="$arch" GOARM="$goarm" \
-              go build -trimpath -ldflags "$ldflags" \
-              -o "dist/irekey-exec-linux-$name" ./cmd/irekey-exec
-          done
           for target in linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64 windows/arm64; do
             os=${target%/*}
             arch=${target#*/}
@@ -158,8 +160,49 @@ jobs:
               -o "dist/irekey-$os-$arch$ext" ./cmd/irekey
           done
           ls -l dist
+      - name: Executor digests
+        run: |
+          set -euo pipefail
+          # An independent check, outside the generator process (which also
+          # reads its output back): every executor the embedded manifest lists
+          # must have its release asset in dist/ with the SHA-256 digest the
+          # manifest records, the value the release's SHA256SUMS will list; and
+          # dist/ must hold no executor the manifest does not list.
+          manifest=internal/execbin/bin/manifest.json
+          entries=$(jq -r '.executors[] | [.platform, .file, .sha256] | @tsv' "$manifest")
+          if [ -z "$entries" ]; then
+            echo "::error::$manifest lists no executors"
+            exit 1
+          fi
+          fail=0
+          while IFS=$'\t' read -r platform file want; do
+            asset="dist/${file%.gz}"
+            if [ ! -f "$asset" ]; then
+              echo "::error::$asset ($platform) is missing"
+              fail=1
+              continue
+            fi
+            got=$(sha256sum "$asset" | cut -d ' ' -f 1)
+            if [ "$got" = "$want" ]; then
+              echo "$asset ($platform): $got"
+            else
+              echo "::error::$asset ($platform) has SHA-256 $got; the manifest records $want"
+              fail=1
+            fi
+          done <<<"$entries"
+          # Any irekey-exec-* entry counts, for any operating system and
+          # including a stray compressed file.
+          for f in dist/irekey-exec-*; do
+            [ -e "$f" ] || continue
+            if ! jq -e --arg file "${f#dist/}.gz" 'any(.executors[]; .file == $file)' "$manifest" >/dev/null; then
+              echo "::error::$f is not listed in $manifest"
+              fail=1
+            fi
+          done
+          exit "$fail"
       - name: Clean machine
         run: |
+          set -euo pipefail
           # Run the binaries the way a first-time user would: an empty home
           # directory and no XDG overrides.
           HOME=$(mktemp -d)

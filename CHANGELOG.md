@@ -93,6 +93,23 @@ Added, Changed, Deprecated, Removed, Fixed and Security, as needed.
   control and format characters (bidirectional text controls among them),
   line and paragraph separators, private-use and unassigned code points
   and invalid UTF-8 before the text reaches a terminal.
+- Package `internal/execbin`, which embeds the device-side executors:
+  `go generate ./internal/execbin` builds `irekey-exec` for linux/amd64,
+  linux/arm64 and linux/arm/v7 with a fixed set of go command settings,
+  fails if the linux/amd64 executor exceeds 12 MiB, and stores each
+  executor as a single gzip member with a fixed header, next to a manifest
+  of the SHA-256 digest and size of each executor and of its compressed
+  file.
+  The same commit in a clean checkout, built with the same Go toolchain,
+  gives the same executors, and compressing identical executor bytes is
+  deterministic. The digest that identifies an executor is that of the
+  uncompressed binary, the value a release's `SHA256SUMS` will list for
+  `irekey-exec-linux-<arch>`. The package loads the manifest and verifies
+  the executors, compressed and decompressed; without the generated files,
+  its API reports that no executor is embedded. The operator command line
+  does not use the package yet. The CI build job builds the executors with
+  the generator, requires the embedded set to verify, and checks the
+  executor release assets against the manifest.
 
 ### Changed
 
