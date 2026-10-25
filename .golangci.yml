@@ -1,0 +1,25 @@
+version: "2"
+
+linters:
+  default: standard
+  enable:
+    - bodyclose
+    - contextcheck
+    - errname
+    - errorlint
+    - exhaustive
+    - gocritic
+    - gosec
+    - noctx
+    - revive
+  exclusions:
+    rules:
+      # Tests build fixtures with fixed file modes, temporary paths and
+      # non-cryptographic randomness on purpose; gosec findings there are
+      # noise. Production code gets the full gosec rule set.
+      - path: _test\.go
+        linters: [gosec]
+
+formatters:
+  enable:
+    - gofmt

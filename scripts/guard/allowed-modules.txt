@@ -1,0 +1,22 @@
+# Go modules that irekey may depend on, with their licenses (checked by
+# scripts/check-gomod.sh).
+#
+# Every module that go.mod requires, direct or indirect, must be listed
+# here. This is how a module under a license outside the allowed set, GPL
+# code in particular, can never become a Go dependency.
+#
+# Format: one module per line,
+#
+#   <module path> <license expression> # <justification>
+#
+# The license expression is one SPDX license identifier, or several joined
+# by AND or OR with spaces around the operator and no parentheses, for
+# example "MIT" or "MIT OR Apache-2.0". Allowed identifiers: MIT,
+# BSD-2-Clause, BSD-3-Clause, Apache-2.0, ISC, MPL-2.0. MPL-2.0 is
+# file-level copyleft and needs a note in an architecture decision record;
+# any other license needs a decision record first and a change to the
+# guard. The justification comment is required.
+#
+# Example:
+#
+#   golang.org/x/crypto BSD-3-Clause # SSH client and known_hosts parsing

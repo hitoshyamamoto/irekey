@@ -1,0 +1,233 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Job ids equal their names so the required status checks of the main branch
+# ruleset (lint, guards, test, dco, build, licenses, plus codeql from
+# codeql.yml) keep stable names.
+jobs:
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
+        with:
+          version: v2.14.0
+      - name: actionlint
+        # actionlint runs shellcheck on every run: block when it is on PATH;
+        # it is preinstalled on the ubuntu runners.
+        run: go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
+
+  guards:
+    name: guards
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: Guard self-tests
+        run: scripts/test-guards.sh
+      - name: Guard scripts
+        run: |
+          # Every scripts/check-*.sh runs, so a new guard is picked up without
+          # editing this workflow. All guards run even after a failure.
+          fail=0
+          for s in scripts/check-*.sh; do
+            echo "::group::$s"
+            sh "$s" || fail=1
+            echo "::endgroup::"
+          done
+          exit "$fail"
+
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: Vet
+        run: go vet ./...
+      - name: Test
+        # The floor measures the product code (cmd and internal). The guard
+        # program in scripts/ is tested here too but not counted, so it
+        # cannot hold up the product's coverage.
+        run: go test -race -coverpkg=./cmd/...,./internal/... -coverprofile=cover.out ./...
+      - name: Coverage floor (80%)
+        run: |
+          total=$(go tool cover -func=cover.out | awk '/^total:/ { sub("%", "", $NF); print $NF }')
+          echo "statement coverage: ${total}%"
+          awk -v t="$total" 'BEGIN { exit !(t >= 80) }' || { echo "coverage below 80%" >&2; exit 1; }
+      - name: Fuzz (short)
+        run: scripts/fuzz.sh 30s
+      - name: Vulnerability check
+        run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
+
+  dco:
+    name: dco
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Check Signed-off-by
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          # Every commit of the pull request must carry a Developer Certificate
+          # of Origin sign-off (git commit -s). See CONTRIBUTING.md. There is no
+          # exemption: Dependabot adds its own Signed-off-by line to the
+          # commits it creates.
+          missing=0
+          for c in $(git rev-list --no-merges "$BASE..$HEAD"); do
+            if ! git show -s --format='%(trailers:key=Signed-off-by,valueonly)' "$c" | grep -q '[^[:space:]]'; then
+              echo "::error::commit $c has no Signed-off-by line (use git commit -s)"
+              missing=1
+            fi
+          done
+          exit "$missing"
+
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: Build all targets
+        env:
+          # Static binaries. Set here only: the race detector in the test job
+          # needs cgo.
+          CGO_ENABLED: "0"
+        run: |
+          ldflags="-s -w -X github.com/hitoshyamamoto/irekey/internal/version.Version=ci"
+          # Device-side executors first, then the operator CLI.
+          for arch in amd64 arm64 arm; do
+            # GOARM selects ARMv7 for the 32-bit build and is ignored otherwise.
+            case "$arch" in
+              arm) name=armv7 goarm=7 ;;
+              *) name=$arch goarm= ;;
+            esac
+            GOOS=linux GOARCH="$arch" GOARM="$goarm" \
+              go build -trimpath -ldflags "$ldflags" \
+              -o "dist/irekey-exec-linux-$name" ./cmd/irekey-exec
+          done
+          for target in linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64 windows/arm64; do
+            os=${target%/*}
+            arch=${target#*/}
+            case "$os" in
+              windows) ext=.exe ;;
+              *) ext= ;;
+            esac
+            GOOS="$os" GOARCH="$arch" \
+              go build -trimpath -ldflags "$ldflags" \
+              -o "dist/irekey-$os-$arch$ext" ./cmd/irekey
+          done
+          ls -l dist
+      - name: Clean machine
+        run: |
+          # Run the binaries the way a first-time user would: an empty home
+          # directory and no XDG overrides.
+          HOME=$(mktemp -d)
+          export HOME
+          unset XDG_CONFIG_HOME XDG_CACHE_HOME
+          ./dist/irekey-linux-amd64 version
+          ./dist/irekey-exec-linux-amd64 capabilities | jq -e .
+
+  licenses:
+    name: licenses
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: Install go-licenses
+        run: GOBIN="$RUNNER_TEMP/bin" go install github.com/google/go-licenses/v2@v2.0.1
+      - name: Check dependency licenses
+        run: |
+          # Dependencies can differ per operating system (build constraints),
+          # so every release target OS is checked. GOROOT is set explicitly:
+          # go-licenses tells standard library packages apart by the GOROOT it
+          # was built with, and reports them as "no module info" when that
+          # differs from the toolchain selected by go.mod. The same command then
+          # works on a machine whose installed Go differs from that toolchain.
+          fail=0
+          goroot=$(go env GOROOT)
+          for os in linux darwin windows; do
+            echo "::group::$os"
+            GOROOT="$goroot" GOOS=$os "$RUNNER_TEMP/bin/go-licenses" check ./... \
+              --allowed_licenses=MIT,BSD-2-Clause,BSD-3-Clause,Apache-2.0,ISC,MPL-2.0 || fail=1
+            echo "::endgroup::"
+          done
+          exit "$fail"
+
+  # Not a required check.
+  integration:
+    name: integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: Integration tests
+        # Integration tests (sshd and systemd containers) arrive in a later
+        # change; until then no test matches and the job passes.
+        run: go test -race -tags integration -run '^TestIntegration' ./...
+
+  # Not a required check.
+  e2e-smoke:
+    name: e2e-smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: Lab smoke scenarios
+        # Lab scenarios arrive in a later change; until then the test skips.
+        run: go test -tags e2e -run '^TestE2E' -v ./internal/lab/...

@@ -1,0 +1,87 @@
+# Domains that may appear in documentation, examples, lab files, schemas
+# and test data (checked by scripts/check-realdata.sh).
+#
+# The reserved names are always allowed and need no entry: example.com,
+# example.net, example.org and their subdomains, names ending in .example,
+# .test, .invalid or .localhost, and localhost.
+#
+# Only tools, modules, standards and hosting services that irekey uses or
+# cites belong here; never a customer, site or employer domain. An entry
+# also allows its subdomains (github.com allows docs.github.com and
+# users.noreply.github.com), so list a single site of a shared hosting
+# domain (adr.github.io), never the hosting domain itself (github.io).
+# Intranet names (.local, .lan, .corp, .internal, .intranet, .home.arpa,
+# .localdomain) are always reported unless the whole name is listed.
+#
+# Format: one domain per line, followed by a comment saying why it is
+# allowed. Blank lines and full-line comments are allowed.
+#
+#   <domain> # <why>
+
+# Code hosting and container registries
+github.com # source hosting, GitHub Docs, noreply commit addresses
+githubusercontent.com # raw files and avatars served by GitHub
+adr.github.io # architecture decision record templates and tools
+jedisct1.github.io # minisign documentation, compared in the signature format decision
+ghcr.io # container registry for the lab images
+gitlab.com # GitLab forge support and its documentation
+gitea.com # Gitea, the self-hosted forge in the lab
+
+# Go toolchain and modules
+go.dev # Go documentation and package index
+golang.org # Go modules under golang.org/x
+gopkg.in # Go module import paths
+go.yaml.in # Go YAML module import path
+pgregory.net # property-based testing module
+filippo.io # age encryption module
+modernc.org # pure-Go SQLite module
+golangci-lint.run # linter documentation
+etcd.io # bbolt module path (go.etcd.io), compared for local state
+goreleaser.com # release tool, compared in the release process decision
+
+# Standards, conventions and community files
+keepachangelog.com # changelog format
+semver.org # versioning scheme
+conventionalcommits.org # commit message convention
+developercertificate.org # Developer Certificate of Origin
+contributor-covenant.org # code of conduct
+json-schema.org # JSON Schema specification
+yaml.org # YAML specification
+spdx.org # license identifiers
+cyclonedx.org # SBOM format
+fundingjson.org # funding manifest format
+mitre.org # CWE and CVE references
+cognitect.com # the original article on architecture decision records, cited by ADR 0001
+rfc-editor.org # RFC texts
+ietf.org # IETF datatracker and RFC drafts
+openssh.com # OpenSSH protocol extension names, such as keepalive requests
+
+# Supply-chain security
+deps.dev # Open Source Insights dependency data
+bestpractices.dev # OpenSSF Best Practices badge
+openssf.org # Open Source Security Foundation
+scorecard.dev # OpenSSF Scorecard
+securityscorecards.dev # OpenSSF Scorecard API and badges
+sigstore.dev # keyless signing of releases
+slsa.dev # build provenance levels
+
+# Tools and reference manuals
+docker.com # Docker and Docker Compose documentation
+podman.io # Podman, an alternative container runtime for the lab
+pypi.org # Python packages used by the lab simulators
+pyinstaller.org # PyInstaller, compared in the implementation language decision
+ansible.com # Ansible, compared in the delivery model decision
+mender.io # Mender, compared in the delivery model decision
+bitwarden.com # Bitwarden CLI, a vault provider
+htmx.org # htmx, considered for the web UI
+w3.org # W3C specifications (Content Security Policy)
+whatwg.org # HTML Living Standard (server-sent events)
+openbsd.org # OpenBSD manual pages (ssh-keygen, signify)
+shields.io # README badges
+git-scm.com # git documentation
+freedesktop.org # systemd documentation
+systemd.io # systemd project documentation
+debian.org # Debian packages and mirrors for the lab images
+man7.org # Linux manual pages
+iana.org # IANA, source of the list of top-level domains in scripts/guard/tlds.txt, cited by ADR 0022
+home.arpa # the special-use domain itself, named where the guard rules are described (RFC 8375); names under it are still reported

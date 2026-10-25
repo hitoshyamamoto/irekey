@@ -1,0 +1,46 @@
+version: 2
+
+# The docker ecosystem (lab/images/*) is added together with the first lab
+# image; there is no Dockerfile to watch yet.
+
+updates:
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    # Wait a week before proposing a new release, so a compromised or broken
+    # version is more likely to be pulled before it reaches this repository.
+    # Security updates are not delayed.
+    cooldown:
+      default-days: 7
+    groups:
+      go-modules:
+        patterns: ["*"]
+    labels: ["dependencies", "go"]
+    # Pull request titles become squash-commit titles, so they must be
+    # Conventional Commits: "build(deps): bump ...".
+    commit-message:
+      prefix: build
+      include: scope
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    # Same one-week delay as for Go modules; security updates are not delayed.
+    cooldown:
+      default-days: 7
+    groups:
+      # One pull request for all action bumps. github/codeql-action's init,
+      # analyze and upload-sarif sub-actions must stay on the same version,
+      # so they cannot be bumped separately.
+      github-actions:
+        patterns: ["*"]
+    labels: ["dependencies", "github-actions"]
+    # "ci: bump ..." keeps the squash-commit title a Conventional Commit.
+    commit-message:
+      prefix: ci

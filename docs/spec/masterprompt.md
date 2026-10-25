@@ -2,7 +2,7 @@
 
 > Build specification for Claude Code. This document is the single source of truth for the first versions of `irekey`. Read it completely before writing any code.
 >
-> **Amendments.** The project was renamed from its working name "irekeys" to "irekey" (ADR 0020). Invariants are referred to by descriptive names outside this document, instead of by their IDs (ADR 0021). Each amendment is explained in the ADR named next to it.
+> **Amendments.** The project was renamed from its working name "irekeys" to "irekey" (ADR 0020). Invariants are referred to by descriptive names outside this document, instead of by their IDs (ADR 0021). The repository guards and CI checks were refined when they were implemented (ADR 0022). Each amendment is explained in the ADR named next to it.
 
 ---
 
@@ -440,9 +440,9 @@ exec (device side) ─► {journal, guard, adapter, health, bundle(verify only)}
 pure packages (no I/O): model, layers, variant, graph, schema, errs, redact
 ```
 
-- Pure packages import no I/O package and are tested exhaustively with table tests, property tests and fuzzing.
+- Pure packages import no I/O package and are tested exhaustively with table tests, property tests and fuzzing. `net/netip` and `log/slog` are allowed: neither opens files or connections by itself (ADR 0022).
 - Only `cmd/irekey` and `cli` may import `ui` (to start the server); nothing imports `cli`. The UI never calls `transport` directly; it calls `app`.
-- `cmd/irekey-exec` must not import any operator-side package (`app`, `cli`, `ui`, `vault`, `forge`, `state`, `deployrepo`). A test enforces this with `go list -deps`.
+- `cmd/irekey-exec` must not import any operator-side package (`app`, `cli`, `ui`, `vault`, `forge`, `state`, `deployrepo`). A test enforces this with `go list -deps`. The same test also keeps the executor and every package under `internal/exec` away from `execbin`, `transport`, `transfer` and `rollout`, and allows no module outside the standard library unless it is listed with a justification (ADR 0022).
 - The executor binary must stay small: target < 8 MiB stripped for linux/amd64 (Default). A CI check fails above 12 MiB.
 
 ---
@@ -1199,7 +1199,7 @@ Simulate the whole workflow with containers only, in CI and on a laptop, so ever
 | Compatibility zoo | `testdata/compat/<version>/` | bundles, journals and repository files from every released version must be read by the current code |
 | Architecture tests | `go list -deps` assertions | dependency rule (Section 8.4), executor size limit |
 
-Rules: tests never need hardware or internet (except the lab image pull in e2e); bug fixes come with a regression test; invariant tests are named after the invariant, `Test<Name>_*` (Section 7); race detector always on in CI; coverage floor 80 % total (CI-enforced, same awk check as the maintainer's other Go projects).
+Rules: tests never need hardware or internet (except the lab image pull in e2e); bug fixes come with a regression test; invariant tests are named after the invariant, `Test<Name>_*` (Section 7); race detector always on in CI; coverage floor 80 % over the product code, `cmd/` and `internal/` (CI-enforced, same awk check as the maintainer's other Go projects; the guard program in `scripts/` is tested but not counted, ADR 0022).
 
 ---
 
@@ -1245,16 +1245,17 @@ This section mirrors the maintainer's existing projects (`modtop` for Go, `soapb
 - Signed tags (SSH, `gpg.format=ssh`, verified with `git tag -v` against `.github/allowed_signers`).
 - Dependabot PRs may be auto-merged after required checks (optional, same pattern as `soapbar`, only when a GitHub App token is configured).
 
-### 21.4 Guard scripts (`scripts/`, run in CI lint job)
+### 21.4 Guard scripts (`scripts/`, run in the CI guards job, ADR 0022)
 
 | Script | Fails when |
 |---|---|
 | `check-hostkey.sh` | `InsecureIgnoreHostKey` or a host-key callback returning nil unconditionally appears outside tests |
 | `check-shell.sh` | remote commands are assembled with `fmt.Sprintf`/`+` into a shell string outside `internal/transport/ssh/quote.go` |
-| `check-realdata.sh` | an IPv4/IPv6 address outside the documentation and loopback ranges, a globally administered MAC address, or a domain other than `example.*` and an allowlist of tool, module and hosting domains (`github.com`, `golang.org`, `go.dev`, `ghcr.io`, ...) appears in `examples/`, `testdata/`, `lab/` or docs |
+| `check-realdata.sh` | an IPv4/IPv6 address outside the documentation and loopback ranges or a globally administered MAC address appears anywhere in the repository; or a domain other than `example.com`, `example.net`, `example.org`, the reserved `.example`, `.test` and `.invalid` names and an allowlist of tool, module and hosting domains (`github.com`, `golang.org`, `go.dev`, `ghcr.io`, ...), or any intranet name (`.local`, `.lan`, `.corp`, `.internal`, ...), appears in `examples/`, `testdata/`, `lab/`, `schemas/`, docs, root Markdown files or GitHub templates (ADR 0022) |
 | `check-language.sh` | non-ASCII letters appear outside an allowlist (`docs/spec/masterprompt.md` and `README.md` for the Japanese terms of Section 1.2, test fixtures for UTF-8 handling) |
 | `check-exec-deps.sh` | `cmd/irekey-exec` depends on an operator-side package, or the executor exceeds the size limit |
-| `check-spdx.sh` | a `.go` file lacks `// SPDX-License-Identifier: MIT` |
+| `check-spdx.sh` | a `.go` file lacks `// SPDX-License-Identifier: MIT` on its first line, or a `.sh` file lacks `# SPDX-License-Identifier: MIT` on its second line |
+| `check-gomod.sh` | a module that `go.mod` requires or uses as a replacement is not listed in `scripts/guard/allowed-modules.txt` with an allowed license, or a `replace` points into `lab/` (the go.mod guard of Section 21.8, ADR 0022) |
 | `check-errors.sh` | an error code is used but not registered, or registered but undocumented/untested |
 
 ### 21.5 CI workflows (`.github/workflows/`)
@@ -1263,7 +1264,7 @@ Global rules (copy from `modtop`/`soapbar`): `permissions: contents: read` at th
 
 | Workflow | Trigger | Jobs |
 |---|---|---|
-| `ci.yml` | push to main, PR | **lint** (golangci-lint, guard scripts, `actionlint`), **test** (`go vet`, `go test -race -coverpkg=./... -coverprofile`, coverage floor 80 %, short fuzz 30 s per target, `govulncheck` pinned), **dco** (Signed-off-by on every PR commit), **build** (cross-compile executors then CLI for all targets, `-trimpath -ldflags "-s -w -X ...version=ci"`, executor size check, clean-machine smoke test: `irekey version`, `irekey doctor` with `HOME` in a temp dir), **integration** (sshd/systemd containers), **e2e-smoke** (lab scenarios S01-small, S04, S05, S06 on PRs touching device-side code; full set nightly), **licenses** (`go-licenses` check) |
+| `ci.yml` | push to main, PR | **lint** (golangci-lint, `actionlint`), **guards** (guard self-tests and every `scripts/check-*.sh`, including the executor dependency and size check), **test** (`go vet`, `go test -race -coverpkg=./cmd/...,./internal/... -coverprofile`, coverage floor 80 % over the product code, short fuzz 30 s per target, `govulncheck` pinned), **dco** (Signed-off-by on every PR commit), **build** (cross-compile executors then CLI for all targets, `-trimpath -ldflags "-s -w -X ...version=ci"`, clean-machine smoke test: `irekey version`, `irekey doctor` with `HOME` in a temp dir), **integration** (sshd/systemd containers), **e2e-smoke** (lab scenarios S01-small, S04, S05, S06 on PRs touching device-side code; full set nightly), **licenses** (`go-licenses` check) |
 | `codeql.yml` | push, PR, weekly | `github/codeql-action` init/analyze, `languages: go`, `build-mode: autobuild` or manual (Verify for Go), `queries: security-extended` |
 | `scorecard.yml` | push to main, weekly, branch protection changes | `ossf/scorecard-action` with `publish_results: true`, SARIF upload |
 | `fuzz.yml` | weekly, manual | long fuzzing (5 min per target), crash artifacts uploaded on failure |
@@ -1414,6 +1415,7 @@ Acceptance: all ⚠ scenarios pass; zero open `BUG-*` issues; release `v0.1.0` p
 | 0019 | Stable error-code registry | Proposed |
 | 0020 | Project name irekey | Accepted (maintainer decision; renames the project throughout and amends Section 1.2) |
 | 0021 | Descriptive invariant names outside the specification | Accepted (maintainer decision; amends Sections 7 and 20) |
+| 0022 | Repository guards and CI checks as implemented | Accepted (amends Sections 8.4, 20, 21.4 and 21.5) |
 
 ---
 
