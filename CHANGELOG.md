@@ -58,6 +58,30 @@ Added, Changed, Deprecated, Removed, Fixed and Security, as needed.
   open question, with the behavior while it stays open.
 - `docs/glossary.md`, generated from the specification's glossary and
   kept in sync by a test, which also rejects specification labels in it.
+- The error-code registry, `internal/errs/codes.yaml`: the twenty code
+  categories, every seed code of the specification and four additions
+  (`USR-005` invalid command line, `USR-006` interrupted, `LOC-004`
+  directory not writable, `TIME-002` operator machine clock behind the
+  build time), 78 codes in all. Every code is reserved until a code path
+  produces it.
+- Package `errs`: a constant per code, the typed error that carries a code
+  and the phase of the operation, the exit codes, the device-state and
+  outcome enums, and the resolution of any error to an exit code and a
+  device state. No fallback claims a state that nothing has proven: an
+  error without a code is reported as `BUG-003` and an interruption as
+  `USR-006`, both with the device state `unknown`.
+- `errsgen`, the generator run by `go generate ./internal/errs`: it
+  validates the registry (form and order of the codes, categories, and
+  exit codes that agree with device states) and writes the Go constants
+  and `docs/errors.md`, the reference of every error code, exit code and
+  device state. It uses `go.yaml.in/yaml/v3`, which no irekey binary
+  links.
+- `scripts/check-errors.sh`, a guard that fails when code spells an error
+  code as a string, uses a code that is not registered or still reserved,
+  imports package `errs` with a dot, or leaves an active code unused or
+  without a test that refers to it, when Markdown mentions an unregistered
+  code, or when the registry is invalid or the generated files are stale.
+- ADR 0019 (stable error-code registry), proposed.
 
 ### Changed
 

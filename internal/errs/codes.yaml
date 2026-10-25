@@ -1,0 +1,1050 @@
+# SPDX-License-Identifier: MIT
+#
+# The registry of irekey error codes. "go generate ./internal/errs" turns it
+# into the Go constants of zz_generated_codes.go and into docs/errors.md;
+# never edit those two files by hand. scripts/check-errors.sh checks how the
+# codes are used. ADR 0019 explains the registry.
+#
+# A released code never changes meaning: a condition may be reworded to make
+# it clearer, but a new meaning gets a new code.
+#
+# categories lists the code prefixes in the order the codes are listed:
+#   prefix  two to five capital letters
+#   title   the name of the category
+#   covers  the conditions the category is for
+#
+# Fields of each code:
+#   code          <CATEGORY>-<NNN>; the Go constant drops the dash (errs.LOC001)
+#   category      the prefix of the code
+#   title         a short name
+#   condition     when the code is raised
+#   signal        the structured signal that identifies the condition
+#   handling      what irekey does about it
+#   exit          the exit code: an integer, by-phase (set by the phase of
+#                 the operation) or none (warnings and information end no
+#                 command)
+#   device_state  unchanged, previous-release, new-release, unknown or
+#                 needs-intervention; or by-phase, per-device, as-recovered
+#                 or none
+#   kind          error, warning or info
+#   status        reserved: registered, but no code path produces it yet;
+#                 active: non-test code produces it
+#   since         the first irekey version that has the code
+#
+# Codes are listed by category, in the order of categories, then by number.
+#
+# signal and handling are required once a code is active. A reserved code has
+# them only where the specification states them, and a comment above them
+# names the part of the specification they come from; otherwise they are left
+# out and docs/errors.md says "not defined yet". A code becomes active in the
+# change that makes non-test code produce it, together with a test outside
+# internal/errs that refers to its constant.
+#
+# since: no version of irekey has been released yet. Every code registered
+# before the first release carries "0.1.0", the version of the first planned
+# release; a code registered later carries the version that first ships it.
+#
+# The conditions of the seed codes are copied verbatim from the
+# specification's table of seed error codes, except that invariants are
+# referred to by their names; a test compares the two. Four codes were added
+# with ADR 0019, and the table lists them marked as additions: USR-005,
+# USR-006, LOC-004 and TIME-002. A new code is added here and to that table
+# in the same change.
+
+categories:
+  - prefix: USR
+    title: operator input
+    covers: unknown device/release/group, declined confirmation, interruption, empty selection
+  - prefix: LOC
+    title: operator machine
+    covers: missing git, full disk, incomplete cache, interrupted previous run
+  - prefix: REPO
+    title: deployment repository
+    covers: invalid schema, newer schema, uncommitted changes, release set changed after use, not on protected branch (ApprovedStateOnly)
+  - prefix: ART
+    title: artifacts and builds
+    covers: build failure, digest mismatch, wrong architecture, unsatisfiable dependency
+  - prefix: VER
+    title: verification
+    covers: invalid layer, unknown key, patch does not apply, gate failure
+  - prefix: NET
+    title: network and transport
+    covers: unreachable, closed port, connection lost before/after trigger, stalled transfer
+  - prefix: ID
+    title: identity and authentication
+    covers: host-key mismatch, MAC mismatch, duplicate identity, authentication failure, missing credential
+  - prefix: PRV
+    title: privilege
+    covers: sudo unavailable, wrong sudo password, mandatory access control denial
+  - prefix: PLT
+    title: device platform
+    covers: OS/runtime version, systemd missing, staging on another filesystem, `noexec` mount, missing user, legacy layout not convertible
+  - prefix: STO
+    title: storage
+    covers: free space, inodes, disk full during operation, read-only filesystem, I/O error
+  - prefix: RES
+    title: resources
+    covers: low memory, OOM kill, thermal throttling
+  - prefix: BND
+    title: bundle integrity
+    covers: signature, digest, format, unsafe entries, limits
+  - prefix: DB
+    title: data hooks
+    covers: backup failed, migration failed/irreversible, restore failed
+  - prefix: SVC
+    title: services
+    covers: unit/service does not stop or start, port in use, invalid unit
+  - prefix: HLT
+    title: health
+    covers: failed check, stale data, check already failing, intermittent, regression during soak
+  - prefix: ENG
+    title: executor
+    covers: crash, hang, lock held, damaged journal, contradictory state
+  - prefix: RCV
+    title: recovery
+    covers: missing previous release, previous release also unhealthy, ambiguous state
+  - prefix: RO
+    title: rollouts
+    covers: wave conditions unmet, failure budget exceeded, invalid plan
+  - prefix: TIME
+    title: time
+    covers: skewed device clock, laptop clock moving backwards
+  - prefix: BUG
+    title: internal
+    covers: panic, violated invariant, unclassified error
+
+codes:
+  # USR: operator input
+
+  - code: USR-001
+    category: USR
+    title: unknown name
+    condition: unknown device, component, release set, group or rollout
+    exit: 1
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: USR-002
+    category: USR
+    title: confirmation needs a terminal
+    condition: confirmation required but no TTY
+    # Handling: the command-line conventions (interactive prompts).
+    handling: The command fails. With --yes, a prompt is answered "yes" only where an interactive override is allowed (NoFlagDisablesSafetyCheck).
+    exit: 1
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: USR-003
+    category: USR
+    title: confirmation declined
+    condition: confirmation declined
+    exit: 1
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: USR-004
+    category: USR
+    title: empty selection
+    condition: selection resolved to zero devices
+    exit: 1
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  # Addition (ADR 0019): exit code 1 covers usage errors, and no seed code
+  # describes them.
+  - code: USR-005
+    category: USR
+    title: invalid command line
+    condition: invalid command line (unknown command, unknown flag, wrong arguments)
+    exit: 1
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  # Addition (ADR 0019): exit code 130 has no seed code. The handling follows
+  # the exit-code table (device-side work already started continues) and the
+  # rule that an unproven state is reported as unknown. The device state is
+  # unknown, the safe default; it is unchanged only when the caller states
+  # that no device-side work was involved.
+  - code: USR-006
+    category: USR
+    title: interrupted
+    condition: interrupted by the operator
+    handling: Device-side work that had already started continues. If it had started, the device state is reported as unknown until `irekey status <device>` reconciles it.
+    exit: 130
+    device_state: unknown
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  # LOC: operator machine
+
+  - code: LOC-001
+    category: LOC
+    title: system git missing or too old
+    condition: system git missing or too old for patch operations
+    # Handling: the architectural decision on go-git and system git.
+    handling: Only patch operations need system git; adoption works without it. `irekey doctor` checks it.
+    exit: 13
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: LOC-002
+    category: LOC
+    title: operator machine disk full
+    condition: operator machine disk full
+    exit: 13
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: LOC-003
+    category: LOC
+    title: vault locked or unavailable
+    condition: vault locked or unavailable
+    exit: 13
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  # Addition (ADR 0019): LOC-002 is a full disk, which is a different cause
+  # with a different remedy.
+  - code: LOC-004
+    category: LOC
+    title: directory not writable
+    condition: configuration or cache directory not writable
+    exit: 13
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  # REPO: deployment repository
+
+  - code: REPO-001
+    category: REPO
+    title: schema validation failed
+    condition: file fails its JSON Schema
+    exit: 4
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: REPO-002
+    category: REPO
+    title: schema newer than this irekey
+    condition: schema newer than this irekey
+    # Handling: versioning and migration of the deployment repository.
+    handling: The file is refused, with the irekey version it needs. A newer irekey reads older formats and offers `irekey repo migrate`.
+    exit: 13
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: REPO-003
+    category: REPO
+    title: uncommitted changes
+    condition: uncommitted changes in the deployment repository
+    exit: 5
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: REPO-004
+    category: REPO
+    title: release set modified after use
+    condition: release set modified after use
+    # Handling: release sets (a release set used by a rollout is immutable).
+    handling: A release set used by any rollout is immutable; create a new version of it instead.
+    exit: 4
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: REPO-005
+    category: REPO
+    title: commit not approved
+    condition: commit not reachable from the remote protected branch (ApprovedStateOnly)
+    # Handling: the ApprovedStateOnly invariant.
+    handling: Field devices (not bench or lab devices) receive no release set or layer from the commit.
+    exit: 5
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  # ART: artifacts and builds
+
+  - code: ART-001
+    category: ART
+    title: variant build failed
+    condition: variant build failed
+    exit: 4
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: ART-002
+    category: ART
+    title: architecture mismatch
+    condition: artifact architecture does not match the device
+    exit: 4
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  # VER: verification
+
+  - code: VER-001
+    category: VER
+    title: unknown configuration key
+    condition: configuration key not in the component schema
+    exit: 4
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: VER-002
+    category: VER
+    title: patch stack does not apply
+    condition: patch stack does not apply
+    exit: 4
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: VER-003
+    category: VER
+    title: graph check failed
+    condition: "`graph check` failed"
+    exit: 4
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: VER-004
+    category: VER
+    title: gate failed
+    condition: gate failed
+    exit: 4
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  # NET: network and transport
+
+  - code: NET-001
+    category: NET
+    title: device unreachable
+    condition: device unreachable (TCP connect failed or timed out)
+    # Signal: the condition itself.
+    signal: The TCP connection to the device failed or timed out.
+    exit: 2
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: NET-002
+    category: NET
+    title: SSH port closed
+    condition: SSH port closed
+    exit: 2
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: NET-003
+    category: NET
+    title: connection lost before device-side work
+    condition: connection lost before device-side work started
+    exit: 2
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: NET-004
+    category: NET
+    title: connection lost during device-side work
+    condition: connection lost after device-side work started
+    # Handling: the error-model rule that unknown is not success.
+    handling: The device state is reported as unknown, and further changes to the device are blocked until `irekey status <device>` reconciles it.
+    exit: 12
+    device_state: unknown
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: NET-005
+    category: NET
+    title: transfer stalled
+    condition: transfer stalled
+    exit: 2
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  # ID: identity and authentication
+
+  - code: ID-001
+    category: ID
+    title: host key mismatch
+    condition: host key differs from the pinned key
+    # Signal: adoption (a pre-supplied fingerprint that does not match is
+    # this code). Handling: the PinnedIdentity invariant.
+    signal: The host key the device presents differs from its pinned key, or, during adoption, from the fingerprint supplied in advance.
+    handling: No operation runs on the device (PinnedIdentity).
+    exit: 3
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: ID-002
+    category: ID
+    title: MAC address mismatch
+    condition: MAC address set differs
+    # Handling: the PinnedIdentity invariant.
+    handling: No state-changing operation runs on the device (PinnedIdentity).
+    exit: 3
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: ID-003
+    category: ID
+    title: identity already enrolled
+    condition: identity already enrolled for another device
+    # Handling: adoption (cloned images).
+    handling: Adoption refuses the identity (cloned images).
+    exit: 3
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: ID-004
+    category: ID
+    title: authentication failed
+    condition: authentication failed
+    exit: 11
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: ID-005
+    category: ID
+    title: credential missing
+    condition: credential missing in the vault
+    exit: 11
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: ID-006
+    category: ID
+    title: bundle bound to another device
+    condition: bundle bound to another device
+    # Signal: the PinnedIdentity invariant (the executor re-checks the
+    # binding).
+    signal: The executor re-checks the device ID and host-key fingerprint that the bundle is bound to (PinnedIdentity).
+    exit: 4
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  # PRV: privilege
+
+  - code: PRV-001
+    category: PRV
+    title: sudo not available
+    condition: sudo not available for the account
+    exit: 5
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: PRV-002
+    category: PRV
+    title: sudo password rejected
+    condition: sudo password rejected
+    exit: 11
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: PRV-003
+    category: PRV
+    title: mandatory access control denial
+    condition: mandatory access control denied an action
+    # Handling: the error-model rule for phase-dependent codes.
+    handling: Set by phase. Before the switch, the operation aborts and the device is unchanged (exit 6). After the switch, the device is rolled back to the previous release set (exit 7); if the rollback fails, the device needs intervention (exit 8).
+    exit: by-phase
+    device_state: by-phase
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  # PLT: device platform
+
+  - code: PLT-001
+    category: PLT
+    title: platform requirement unmet
+    condition: platform requirement unmet
+    exit: 5
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: PLT-002
+    category: PLT
+    title: systemd missing or too old
+    condition: systemd missing or too old
+    exit: 5
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: PLT-003
+    category: PLT
+    title: staging on another filesystem
+    condition: staging not on the same filesystem as releases
+    # Handling: the device layout.
+    handling: The operation is refused. releases/ must be on the same filesystem as staging/ and blobs/, for hardlinks and the atomic rename.
+    exit: 5
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: PLT-004
+    category: PLT
+    title: executor path mounted noexec
+    condition: executor path mounted `noexec`
+    exit: 5
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: PLT-005
+    category: PLT
+    title: required user or group missing
+    condition: required user or group missing
+    exit: 5
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: PLT-006
+    category: PLT
+    title: legacy layout not convertible
+    condition: legacy layout not automatically convertible
+    exit: 5
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  # STO: storage
+
+  - code: STO-001
+    category: STO
+    title: insufficient free space
+    condition: insufficient free space
+    # Signal and handling: the DiskBudget invariant and the disk budget of
+    # the device side.
+    signal: The free space is less than the staged bytes plus the declared backup estimate plus a safety margin of max(10 % of the filesystem, 1 GiB).
+    handling: No transfer starts (DiskBudget). The space is checked before the transfer and again before the activation.
+    exit: 5
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: STO-002
+    category: STO
+    title: insufficient inodes
+    condition: insufficient inodes
+    # Handling: the DiskBudget invariant.
+    handling: No transfer starts (DiskBudget).
+    exit: 5
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: STO-003
+    category: STO
+    title: disk full during operation
+    condition: disk full during operation
+    # Handling: the error-model rule for phase-dependent codes.
+    handling: Set by phase. Before the switch, the operation aborts and the device is unchanged (exit 6). After the switch, the device is rolled back to the previous release set (exit 7); if the rollback fails, the device needs intervention (exit 8).
+    exit: by-phase
+    device_state: by-phase
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: STO-004
+    category: STO
+    title: read-only filesystem
+    condition: read-only filesystem
+    exit: 5
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  # RES: resources
+
+  - code: RES-001
+    category: RES
+    title: insufficient memory
+    condition: insufficient memory for the operation
+    exit: 5
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  # BND: bundle integrity
+
+  - code: BND-001
+    category: BND
+    title: invalid signature
+    condition: manifest signature invalid or signer not trusted
+    # Handling: the SignedOnly invariant.
+    handling: The executor does not apply the bundle (SignedOnly).
+    exit: 4
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: BND-002
+    category: BND
+    title: blob digest mismatch
+    condition: blob digest mismatch
+    # Handling: the SignedOnly invariant.
+    handling: The executor does not apply the bundle (SignedOnly).
+    exit: 4
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: BND-003
+    category: BND
+    title: unknown format
+    condition: unknown format or critical extension
+    # Signal and handling: the bundle format.
+    signal: An unknown `format` value, or an unknown entry in `critical_extensions`.
+    handling: The executor refuses the bundle. Unknown non-critical fields are ignored.
+    exit: 4
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: BND-004
+    category: BND
+    title: unsafe entry
+    condition: unsafe entry (path traversal, device file, setuid, outside symlink)
+    # Signal: the path safety rules of the bundle format.
+    signal: An absolute path, a `..` element, a symlink pointing outside the component root, a device file, a setuid or setgid bit, or a path that is not normalized UTF-8.
+    exit: 4
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: BND-005
+    category: BND
+    title: bundle limits exceeded
+    condition: bundle limits exceeded
+    # Signal: the limits of the bundle format (defaults).
+    signal: More than 200 000 files, more than 20 GiB in the bundle, or a path longer than 1024 bytes (default limits).
+    exit: 4
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  # DB: data hooks
+
+  - code: DB-001
+    category: DB
+    title: backup failed
+    condition: backup hook failed (before SWITCH)
+    # Handling: the activation state machine (any failure before the switch)
+    # and hooks (a failing hook before the switch aborts).
+    handling: The activation aborts before the switch. The services that were stopped are restarted and the guard is disarmed; the device is unchanged.
+    exit: 6
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: DB-002
+    category: DB
+    title: migration failed
+    condition: migration failed (after SWITCH; rolled back)
+    # Handling: hooks (a failing hook after the switch triggers rollback) and
+    # the WholeSetRollback invariant.
+    handling: The device is rolled back to the previous release set. The database is restored from the backup only when the migration was declared irreversible (WholeSetRollback).
+    exit: 7
+    device_state: previous-release
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: DB-003
+    category: DB
+    title: restore failed
+    condition: restore after irreversible migration failed
+    exit: 8
+    device_state: needs-intervention
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  # SVC: services
+
+  - code: SVC-001
+    category: SVC
+    title: service did not stop
+    condition: service did not stop (before SWITCH; stopped services restarted)
+    # Handling: the condition and the activation state machine (any failure
+    # before the switch).
+    handling: The activation aborts before the switch. The services that were stopped are restarted and the guard is disarmed; the device is unchanged.
+    exit: 6
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: SVC-002
+    category: SVC
+    title: service did not start
+    condition: service did not start
+    # Handling: the activation state machine (any failure after the switch).
+    handling: The device is rolled back to the previous release set (ExplicitPointOfNoReturn).
+    exit: 7
+    device_state: previous-release
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: SVC-003
+    category: SVC
+    title: port in use
+    condition: port already in use
+    # Handling: the activation state machine (any failure after the switch).
+    handling: The device is rolled back to the previous release set (ExplicitPointOfNoReturn).
+    exit: 7
+    device_state: previous-release
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  # HLT: health
+
+  - code: HLT-001
+    category: HLT
+    title: critical health check failed
+    condition: critical health check failed
+    # Handling: the FunctionalHealth invariant and health checks (log
+    # collection on failure).
+    handling: The device is rolled back to the previous release set (FunctionalHealth). The logs of the component are collected, bounded and redacted.
+    exit: 7
+    device_state: previous-release
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: HLT-002
+    category: HLT
+    title: stale data
+    condition: data freshness exceeded
+    # Handling: the FunctionalHealth invariant and health checks (log
+    # collection on failure).
+    handling: The device is rolled back to the previous release set (FunctionalHealth). The logs of the component are collected, bounded and redacted.
+    exit: 7
+    device_state: previous-release
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: HLT-003
+    category: HLT
+    title: check failing before the update
+    condition: check already failing before the update (informational)
+    # Signal and handling: health checks (the pre-flight baseline) and the
+    # FunctionalHealth invariant.
+    signal: The check fails in the pre-flight run that records the baseline.
+    handling: The check is reported and excluded from the success criteria of the update.
+    exit: none
+    device_state: none
+    kind: info
+    status: reserved
+    since: "0.1.0"
+
+  - code: HLT-004
+    category: HLT
+    title: intermittent health
+    condition: intermittent result during soak
+    # Handling: health checks (intermittent results count as failure).
+    handling: An intermittent result counts as a failure; the device is rolled back to the previous release set.
+    exit: 7
+    device_state: previous-release
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  # ENG: executor
+
+  - code: ENG-001
+    category: ENG
+    title: executor crashed
+    condition: executor crashed
+    # Handling: the error-model rule that unknown is not success.
+    handling: The device state is reported as unknown, and further changes to the device are blocked until `irekey status <device>` reconciles it.
+    exit: 12
+    device_state: unknown
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: ENG-002
+    category: ENG
+    title: device lock held
+    condition: device lock held by another operation
+    # Signal and handling: the OneOperationPerDevice invariant.
+    signal: An active lease record in the journal, or the flock on /var/lib/irekey/lock held by a running executor.
+    handling: The second operator is refused, not queued (OneOperationPerDevice).
+    exit: 14
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: ENG-003
+    category: ENG
+    title: executor hung
+    condition: executor hung (step timeout)
+    # Signal: the condition itself. Handling: the error-model rule that
+    # unknown is not success.
+    signal: A step of the executor exceeded its timeout.
+    handling: The device state is reported as unknown, and further changes to the device are blocked until `irekey status <device>` reconciles it.
+    exit: 12
+    device_state: unknown
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: ENG-004
+    category: ENG
+    title: truncated journal line
+    condition: truncated last journal line after power loss; recovered (warning)
+    # Signal and handling: the journal.
+    signal: The last line of the journal is truncated.
+    handling: The line is ignored, recovery proceeds, and the code is reported as a warning.
+    exit: none
+    device_state: as-recovered
+    kind: warning
+    status: reserved
+    since: "0.1.0"
+
+  - code: ENG-005
+    category: ENG
+    title: contradictory state
+    condition: contradictory state between journal and filesystem
+    exit: 8
+    device_state: needs-intervention
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: ENG-006
+    category: ENG
+    title: journal damaged
+    condition: journal damaged beyond the last line
+    # Signal: the journal (a journal that cannot be parsed otherwise).
+    signal: The journal cannot be parsed, other than a truncated last line.
+    exit: 8
+    device_state: needs-intervention
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  # RCV: recovery
+
+  - code: RCV-001
+    category: RCV
+    title: previous release missing
+    condition: previous release missing
+    exit: 8
+    device_state: needs-intervention
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: RCV-002
+    category: RCV
+    title: previous release unhealthy
+    condition: previous release also unhealthy
+    # Handling: the activation state machine (rollback health fails).
+    handling: Logs are collected and the device is left on the previous release set.
+    exit: 8
+    device_state: needs-intervention
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: RCV-003
+    category: RCV
+    title: ambiguous state
+    condition: state ambiguous after recovery
+    exit: 8
+    device_state: needs-intervention
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  # RO: rollouts
+
+  - code: RO-001
+    category: RO
+    title: wave conditions not met
+    condition: wave conditions not met (soak, previous wave)
+    exit: 5
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: RO-002
+    category: RO
+    title: failure budget exceeded
+    condition: failure budget exceeded
+    # Handling: the FailureBudget invariant.
+    handling: The wave halts. Activations in flight finish; no new ones start (FailureBudget).
+    exit: 10
+    device_state: per-device
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: RO-003
+    category: RO
+    title: invalid rollout plan
+    condition: invalid rollout plan
+    exit: 4
+    device_state: unchanged
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  # TIME: time
+
+  - code: TIME-001
+    category: TIME
+    title: device clock skew
+    condition: device clock skew beyond tolerance (warning; blocks only time-dependent checks)
+    # Handling: the condition itself.
+    handling: Reported as a warning; it blocks only time-dependent checks.
+    exit: none
+    device_state: none
+    kind: warning
+    status: reserved
+    since: "0.1.0"
+
+  # Addition (ADR 0019): a different heuristic from detecting that the
+  # operator machine's clock moved backwards, which needs stored state.
+  - code: TIME-002
+    category: TIME
+    title: operator machine clock behind build time
+    condition: operator machine clock earlier than the build time of this irekey binary (warning)
+    exit: none
+    device_state: none
+    kind: warning
+    status: reserved
+    since: "0.1.0"
+
+  # BUG: internal
+
+  - code: BUG-001
+    category: BUG
+    title: panic
+    condition: panic in irekey
+    # Handling: the exit-code table (a crash report is written) and the
+    # error-model rule that unknown is not success.
+    handling: A crash report is written. The device state is reported as unknown, and further changes to the device are blocked until `irekey status <device>` reconciles it.
+    exit: 15
+    device_state: unknown
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: BUG-002
+    category: BUG
+    title: invariant violated
+    condition: invariant violated
+    # Signal: the Go standards (impossible states become this code).
+    # Handling: as for BUG-001.
+    signal: The code reached a state that is impossible by construction.
+    handling: A crash report is written. The device state is reported as unknown, and further changes to the device are blocked until `irekey status <device>` reconciles it.
+    exit: 15
+    device_state: unknown
+    kind: error
+    status: reserved
+    since: "0.1.0"
+
+  - code: BUG-003
+    category: BUG
+    title: unclassified error
+    condition: unclassified error (fail safe)
+    # Handling: the error-model rules "fail safe on the unknown" and
+    # phase-dependent codes.
+    handling: Fail safe. Before the switch, the operation aborts and the device is unchanged (exit 6). After the switch, the device is rolled back to the previous release set (exit 7); if the rollback fails, the device needs intervention (exit 8).
+    exit: by-phase
+    device_state: by-phase
+    kind: error
+    status: reserved
+    since: "0.1.0"

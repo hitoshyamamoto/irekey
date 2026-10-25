@@ -13,8 +13,8 @@ cd "$(dirname "$0")/.."
 
 status=0
 
-echo "== go test ./scripts/guard/..."
-if ! go test ./scripts/guard/...; then
+echo "== go test ./scripts/guard/... ./internal/errs/internal/gen/..."
+if ! go test ./scripts/guard/... ./internal/errs/internal/gen/...; then
 	echo "error: the guard unit tests failed" >&2
 	status=1
 fi
@@ -76,6 +76,17 @@ put "$t/good/scripts/guard/allowed-modules.txt" 'example.com/dep MIT # fixture d
 put "$t/bad/go.mod" "$gomod"'require example.com/other v1.0.0\nreplace example.com/sim => ./lab/sim\n'
 put "$t/bad/scripts/guard/allowed-modules.txt" 'example.com/dep %s # copyleft\n' GPL-3.0-only
 
+# errors: both trees hold the repository's registry and its generated files;
+# the bad tree also spells a code out in a string literal.
+t=$tmp/errors
+for f in internal/errs/codes.yaml internal/errs/zz_generated_codes.go docs/errors.md; do
+	for tree in good bad; do
+		mkdir -p "$(dirname "$t/$tree/$f")"
+		cp "$f" "$t/$tree/$f"
+	done
+done
+put "$t/bad/cmd/x/main.go" "$spdx_go"'var code = "%s-%s"\n' LOC 001
+
 # check_guard NAME: the good tree must pass, and the bad tree must fail
 # with findings (not with a usage or internal error).
 check_guard() {
@@ -97,7 +108,7 @@ check_guard() {
 }
 
 echo "== guard wrappers"
-for name in spdx hostkey shell realdata language gomod; do
+for name in spdx hostkey shell realdata language gomod errors; do
 	check_guard "$name"
 done
 

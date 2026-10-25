@@ -24,16 +24,18 @@ The base that every later change builds on. Already in place:
   license checks, CodeQL and OpenSSF Scorecard, all required before a
   merge to `main` except Scorecard;
 - the first commands, `irekey version` and `irekey-exec capabilities`;
+- the error code registry (`internal/errs/codes.yaml`), with its
+  generated constants and [docs/errors.md](docs/errors.md);
 - the community and governance documents, and the threat model;
 - the architecture decision records for the decisions the specification
-  has already taken (the error-code registry's record comes with its
-  implementation), the open questions and the glossary.
+  has already taken, including the error code registry (ADR 0019), the
+  open questions and the glossary.
 
 Still to come in this theme:
 
 - a release workflow with reproducible builds, checksums, SBOMs and build
   provenance;
-- the error code registry, and redaction of secrets in logs and output;
+- redaction of secrets in logs and output;
 - `irekey doctor`, which checks the operator machine.
 
 ## Next

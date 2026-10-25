@@ -2,7 +2,7 @@
 
 > Build specification for Claude Code. This document is the single source of truth for the first versions of `irekey`. Read it completely before writing any code.
 >
-> **Amendments.** The project was renamed from its working name "irekeys" to "irekey" (ADR 0020). Invariants are referred to by descriptive names outside this document, instead of by their IDs (ADR 0021). The repository guards and CI checks were refined when they were implemented (ADR 0022). Each amendment is explained in the ADR named next to it.
+> **Amendments.** The project was renamed from its working name "irekeys" to "irekey" (ADR 0020). Invariants are referred to by descriptive names outside this document, instead of by their IDs (ADR 0021). The repository guards and CI checks were refined when they were implemented (ADR 0022). Error codes are registered with a status, reserved or active, four codes were added to Appendix B, and phase-dependent codes have three more phases (ADR 0019). Each amendment is explained in the ADR named next to it.
 
 ---
 
@@ -1031,8 +1031,8 @@ One line per device, updated in place on a TTY: `queued`, `preflight`, `transfer
 4. **Fail safe on the unknown:** an unclassified error aborts before the switch and rolls back after it (`BUG-003`).
 5. **Unknown is not success:** if the state cannot be proven, report `unknown` and block further changes to that device until `irekey status <device>` reconciles it.
 6. **Retry only what is transient and idempotent:** connection setup, blob upload, read-only commands; exponential backoff with jitter, max 3 attempts (Default). Never retry a step after its `intent` without consulting the journal.
-7. Every code has: condition, identification signal, handling, exit code, resulting device state, and at least one test that produces it.
-8. **Phase-dependent codes.** A few codes can occur before or after SWITCH (marked "by phase" in Appendix B). Their exit code is set by the phase: 6 before SWITCH (device `unchanged`), 7 after SWITCH with a successful rollback (`previous-release`), 8 when the rollback fails (`needs-intervention`).
+7. Every active code has: condition, identification signal, handling, exit code, resulting device state, and at least one test that produces it. Codes are registered with a status, `reserved` (registered; no code path produces it yet) or `active` (produced by non-test code). A reserved code has a condition, an exit code and a device state, and a signal and a handling only where this document states them. The producing-test requirement applies to active codes: `check-errors.sh` checks that non-test code uses each active code and that a test outside `internal/errs` refers to its constant (ADR 0019).
+8. **Phase-dependent codes.** A few codes can occur before or after SWITCH (marked "by phase" in Appendix B). Their exit code is set by the phase: 6 before SWITCH (device `unchanged`), 7 after SWITCH with a successful rollback (`previous-release`), 8 when the rollback fails (`needs-intervention`). When nothing is known about device-side work it is 15 (`unknown`); when the caller states that no device-side work was involved it is 15 (`unchanged`); when device-side work started and its outcome is unknown it is 12 (`unknown`) (ADR 0019).
 
 ### 16.2 Categories
 
@@ -1256,7 +1256,7 @@ This section mirrors the maintainer's existing projects (`modtop` for Go, `soapb
 | `check-exec-deps.sh` | `cmd/irekey-exec` depends on an operator-side package, or the executor exceeds the size limit |
 | `check-spdx.sh` | a `.go` file lacks `// SPDX-License-Identifier: MIT` on its first line, or a `.sh` file lacks `# SPDX-License-Identifier: MIT` on its second line |
 | `check-gomod.sh` | a module that `go.mod` requires or uses as a replacement is not listed in `scripts/guard/allowed-modules.txt` with an allowed license, or a `replace` points into `lab/` (the go.mod guard of Section 21.8, ADR 0022) |
-| `check-errors.sh` | an error code is used but not registered, or registered but undocumented/untested |
+| `check-errors.sh` | non-test Go code outside `internal/errs` spells an error code as a string literal, uses a code constant that is not registered or a code that is still reserved; a Go file imports `internal/errs` with a dot or cannot be parsed; an active code is not used by non-test code outside `internal/errs`, or no test outside `internal/errs` refers to its constant; the registry is invalid; the generated Go file or `docs/errors.md` is stale; or a Markdown file outside the specification, `docs/errors.md` and test data mentions a code that is not registered |
 
 ### 21.5 CI workflows (`.github/workflows/`)
 
@@ -1412,7 +1412,7 @@ Acceptance: all ⚠ scenarios pass; zero open `BUG-*` issues; release `v0.1.0` p
 | 0016 | SSHSIG signatures for bundles | Proposed |
 | 0017 | Containerized lab; GPL simulators isolated in images | Proposed |
 | 0018 | Release process: curated changelog and maintainer-signed tags | Accepted |
-| 0019 | Stable error-code registry | Proposed |
+| 0019 | Stable error-code registry | Proposed (amends Sections 16.1, 21.4 and Appendix B) |
 | 0020 | Project name irekey | Accepted (maintainer decision; renames the project throughout and amends Section 1.2) |
 | 0021 | Descriptive invariant names outside the specification | Accepted (maintainer decision; amends Sections 7 and 20) |
 | 0022 | Repository guards and CI checks as implemented | Accepted (amends Sections 8.4, 20, 21.4 and 21.5) |
@@ -1517,9 +1517,12 @@ Seed `internal/errs/codes.yaml` with at least these (condition → exit code →
 | USR-002 | confirmation required but no TTY | 1 | unchanged |
 | USR-003 | confirmation declined | 1 | unchanged |
 | USR-004 | selection resolved to zero devices | 1 | unchanged |
+| USR-005 | invalid command line (unknown command, unknown flag, wrong arguments) (addition, ADR 0019) | 1 | unchanged |
+| USR-006 | interrupted by the operator (addition, ADR 0019) | 130 | unknown |
 | LOC-001 | system git missing or too old for patch operations | 13 | unchanged |
 | LOC-002 | operator machine disk full | 13 | unchanged |
 | LOC-003 | vault locked or unavailable | 13 | unchanged |
+| LOC-004 | configuration or cache directory not writable (addition, ADR 0019) | 13 | unchanged |
 | REPO-001 | file fails its JSON Schema | 4 | unchanged |
 | REPO-002 | schema newer than this irekey | 13 | unchanged |
 | REPO-003 | uncommitted changes in the deployment repository | 5 | unchanged |
@@ -1584,6 +1587,7 @@ Seed `internal/errs/codes.yaml` with at least these (condition → exit code →
 | RO-002 | failure budget exceeded | 10 | per device |
 | RO-003 | invalid rollout plan | 4 | unchanged |
 | TIME-001 | device clock skew beyond tolerance (warning; blocks only time-dependent checks) | — | — |
+| TIME-002 | operator machine clock earlier than the build time of this irekey binary (warning) (addition, ADR 0019) | — | — |
 | BUG-001 | panic in irekey | 15 | unknown |
 | BUG-002 | invariant violated | 15 | unknown |
 | BUG-003 | unclassified error (fail safe) | by phase | by phase |

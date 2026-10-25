@@ -112,8 +112,9 @@ be formatted with `gofmt` and pass `golangci-lint` with the repository's
 [.golangci.yml](.golangci.yml); CI enforces both. In addition:
 
 - Errors are wrapped with `%w`. Typed errors carry an error code (such as
-  `ENG-002`) from the registry in `internal/errs`, which is designed but
-  not implemented yet. A failure message says what failed, its error
+  `ENG-002`) from the registry in `internal/errs/codes.yaml`, documented
+  in [docs/errors.md](docs/errors.md); after editing the registry, run
+  `go generate ./internal/errs`. A failure message says what failed, its error
   code, the state the device was left in, and the next command to run.
   No `panic` outside `main`.
 - Anything that does I/O takes a `context.Context` as its first

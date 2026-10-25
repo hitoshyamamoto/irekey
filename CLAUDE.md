@@ -87,6 +87,7 @@ scripts/fuzz.sh 30s                              # every native fuzz target
 go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
 go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.12   # after editing workflows
 go test ./internal/schema -update                # rewrite docs/schema-versions.txt, then review the diff
+go generate ./internal/errs                      # after editing internal/errs/codes.yaml
 ```
 
 `-race` needs cgo and a C compiler. CI always runs it; if the local machine
@@ -102,7 +103,10 @@ callback), `check-shell.sh` (no remote command built by string formatting;
 the only exception will be the shared quoting function, planned as
 `internal/transport/ssh/quote.go`), `check-realdata.sh`,
 `check-language.sh`, `check-gomod.sh` (every module listed with an allowed
-license; no GPL), `check-exec-deps.sh` (executor dependencies and size).
+license; no GPL), `check-exec-deps.sh` (executor dependencies and size),
+`check-errors.sh` (error codes: registered, used through their generated
+constants, reserved until produced, active ones used by code and referred
+to by a test; generated files fresh; ADR 0019).
 `scripts/test-guards.sh` runs every guard against a tree that must pass and
 a tree that must fail; `check-exec-deps.sh` is checked with a forced
 size-limit failure.
