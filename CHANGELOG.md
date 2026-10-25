@@ -38,6 +38,15 @@ Added, Changed, Deprecated, Removed, Fixed and Security, as needed.
 - ADR 0022, which records how the repository guards and CI checks refine
   the specification (separate guards job, coverage over the product code,
   broader real-data guard, the go.mod guard, stricter executor rule).
+- Governance and community files: README (status, the name, planned
+  quick start, building from source, what irekey is not, sponsors),
+  CONTRIBUTING, GOVERNANCE, SECURITY (including what the security model
+  covers today and what is only designed), STABILITY (the compatibility
+  contract), ROADMAP, CODE_OF_CONDUCT (Contributor Covenant 2.1), the
+  threat model in `docs/threat-model.md`, the OpenSSF Best Practices
+  answers in `.bestpractices.json`, funding metadata (`funding.json`,
+  `.well-known/funding-manifest-urls`, `.github/FUNDING.yml`) and issue
+  forms for bug reports and feature proposals.
 
 ### Changed
 

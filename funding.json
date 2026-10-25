@@ -1,0 +1,187 @@
+{
+    "$schema": "https://fundingjson.org/schema/v1.1.0.json",
+    "version": "v1.1.0",
+    "entity": {
+        "type": "individual",
+        "role": "owner",
+        "name": "Hitoshi Yamamoto",
+        "email": "60470969+hitoshyamamoto@users.noreply.github.com",
+        "description": "Author and sole maintainer of irekey, an open-source Go tool for managing the same software on many offline embedded Linux devices, where every customer needs small local differences, with delivery over SSH and automatic rollback.",
+        "webpageUrl": {
+            "url": "https://github.com/hitoshyamamoto/irekey",
+            "wellKnown": "https://github.com/hitoshyamamoto/irekey/blob/main/.well-known/funding-manifest-urls"
+        }
+    },
+    "projects": [
+        {
+            "guid": "irekey",
+            "name": "irekey",
+            "description": "irekey manages the same software running on many offline embedded Linux computers, where every customer needs small local differences, and delivers changes over SSH with automatic rollback. It is designed to record what each device really runs, keep each customer's adjustments as reviewed configuration layers and patch stacks on top of one base, and deliver signed bundles that roll back unless the operator confirms them, with nothing running permanently on the devices. Early development: the design is specified and the repository foundation is being built; there is no release yet. MIT licensed.",
+            "webpageUrl": {
+                "url": "https://github.com/hitoshyamamoto/irekey",
+                "wellKnown": "https://github.com/hitoshyamamoto/irekey/blob/main/.well-known/funding-manifest-urls"
+            },
+            "repositoryUrl": {
+                "url": "https://github.com/hitoshyamamoto/irekey",
+                "wellKnown": "https://github.com/hitoshyamamoto/irekey/blob/main/.well-known/funding-manifest-urls"
+            },
+            "licenses": [
+                "spdx:MIT"
+            ],
+            "tags": [
+                "go",
+                "embedded-linux",
+                "ssh",
+                "deployment",
+                "configuration-management",
+                "rollback",
+                "devops",
+                "offline"
+            ]
+        }
+    ],
+    "funding": {
+        "channels": [
+            {
+                "guid": "github-sponsors",
+                "type": "payment-provider",
+                "address": "https://github.com/sponsors/hitoshyamamoto",
+                "description": "GitHub Sponsors profile of the maintainer."
+            }
+        ],
+        "plans": [
+            {
+                "guid": "supporter-5",
+                "status": "active",
+                "name": "Supporter",
+                "description": "Individual support for the ongoing maintenance of irekey. Acknowledged with a logo or name and a link in the README; no goods or services are expected or promised in return.",
+                "amount": 5,
+                "currency": "USD",
+                "frequency": "monthly",
+                "channels": [
+                    "github-sponsors"
+                ]
+            },
+            {
+                "guid": "friend-10",
+                "status": "active",
+                "name": "Friend",
+                "description": "Helps fund dependency updates and keeping irekey compatible with new Go releases. Acknowledged with a logo or name and a link in the README; no goods or services are expected or promised in return.",
+                "amount": 10,
+                "currency": "USD",
+                "frequency": "monthly",
+                "channels": [
+                    "github-sponsors"
+                ]
+            },
+            {
+                "guid": "patron-25",
+                "status": "active",
+                "name": "Patron",
+                "description": "Helps fund security fixes and the simulated device lab that will test every change. Acknowledged with a logo or name and a link in the README; no goods or services are expected or promised in return.",
+                "amount": 25,
+                "currency": "USD",
+                "frequency": "monthly",
+                "channels": [
+                    "github-sponsors"
+                ]
+            },
+            {
+                "guid": "champion-50",
+                "status": "active",
+                "name": "Champion",
+                "description": "Substantial individual support for security fixes, coordinated disclosure handling, and lab testing. Acknowledged with a logo or name and a link in the README; no goods or services are expected or promised in return.",
+                "amount": 50,
+                "currency": "USD",
+                "frequency": "monthly",
+                "channels": [
+                    "github-sponsors"
+                ]
+            },
+            {
+                "guid": "startup-75",
+                "status": "active",
+                "name": "Startup",
+                "description": "For early-stage companies that use irekey to manage the software on their devices. Acknowledged with a logo or name and a link in the README; no goods or services are expected or promised in return.",
+                "amount": 75,
+                "currency": "USD",
+                "frequency": "monthly",
+                "channels": [
+                    "github-sponsors"
+                ]
+            },
+            {
+                "guid": "small-company-100",
+                "status": "active",
+                "name": "Small company",
+                "description": "For small companies that depend on irekey to update devices in production. Acknowledged with a logo or name and a link in the README; no goods or services are expected or promised in return.",
+                "amount": 100,
+                "currency": "USD",
+                "frequency": "monthly",
+                "channels": [
+                    "github-sponsors"
+                ]
+            },
+            {
+                "guid": "team-150",
+                "status": "active",
+                "name": "Team",
+                "description": "For teams that rely on irekey to keep per-customer adjustments maintained on top of a moving base. Acknowledged with a logo or name and a link in the README; no goods or services are expected or promised in return.",
+                "amount": 150,
+                "currency": "USD",
+                "frequency": "monthly",
+                "channels": [
+                    "github-sponsors"
+                ]
+            },
+            {
+                "guid": "company-250",
+                "status": "active",
+                "name": "Company",
+                "description": "For companies whose field devices are updated with irekey. Acknowledged with a logo or name and a link in the README; no goods or services are expected or promised in return.",
+                "amount": 250,
+                "currency": "USD",
+                "frequency": "monthly",
+                "channels": [
+                    "github-sponsors"
+                ]
+            },
+            {
+                "guid": "monthly-maintenance",
+                "status": "active",
+                "name": "Organization maintenance",
+                "description": "For organizations that depend on irekey: sustains security fixes and coordinated disclosure, dependency updates, the simulated device lab, and compatibility of the device-side executor across releases. Acknowledged with a logo or name and a link in the README; no goods or services are expected or promised in return.",
+                "amount": 500,
+                "currency": "USD",
+                "frequency": "monthly",
+                "channels": [
+                    "github-sponsors"
+                ]
+            },
+            {
+                "guid": "enterprise-1000",
+                "status": "active",
+                "name": "Enterprise",
+                "description": "For enterprises whose industrial or regulated devices depend on irekey remaining secure, maintained and compatible over the long term. Acknowledged with a logo or name and a link in the README; no goods or services are expected or promised in return.",
+                "amount": 1000,
+                "currency": "USD",
+                "frequency": "monthly",
+                "channels": [
+                    "github-sponsors"
+                ]
+            },
+            {
+                "guid": "one-time-any",
+                "status": "active",
+                "name": "One-time contribution",
+                "description": "Any one-time amount toward the maintenance of irekey. Acknowledged with a logo or name and a link in the README; no goods or services are expected or promised in return.",
+                "amount": 0,
+                "currency": "USD",
+                "frequency": "one-time",
+                "channels": [
+                    "github-sponsors"
+                ]
+            }
+        ]
+    }
+}

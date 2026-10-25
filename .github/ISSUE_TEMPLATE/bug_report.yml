@@ -1,0 +1,58 @@
+name: Bug report
+description: Something does not work as documented.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Security issues must not be reported here. Report them privately, as described in `SECURITY.md`.
+
+        Never paste passwords, private keys or vault contents. Replace real customer, site and host names, addresses and host keys with fictional ones (acme, example.com, 192.0.2.10).
+  - type: input
+    id: version
+    attributes:
+      label: irekey version
+      description: Output of `irekey version`.
+    validations:
+      required: true
+  - type: input
+    id: operator-os
+    attributes:
+      label: Operator OS
+      description: Operating system, version and architecture of the machine that runs irekey.
+      placeholder: Ubuntu 24.04, amd64
+    validations:
+      required: true
+  - type: input
+    id: device-platform
+    attributes:
+      label: Device platform
+      description: Operating system, version, architecture and runtime (systemd or Docker Compose) of the device involved, if any.
+      placeholder: Debian 12, armv7, systemd
+  - type: input
+    id: command
+    attributes:
+      label: Command line
+      description: The full command, with its flags.
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What you did and what you saw, including the error code and the device state if they were printed.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What you expected to happen instead.
+    validations:
+      required: true
+  - type: textarea
+    id: json
+    attributes:
+      label: --json excerpt
+      description: The relevant lines of the same command run with `--json`, if the command supports it.
+      render: text
