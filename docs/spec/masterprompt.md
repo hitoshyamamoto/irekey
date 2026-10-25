@@ -1,6 +1,8 @@
-# irekeys — Master Prompt
+# irekey — Master Prompt
 
-> Build specification for Claude Code. This document is the single source of truth for the first versions of `irekeys`. Read it completely before writing any code.
+> Build specification for Claude Code. This document is the single source of truth for the first versions of `irekey`. Read it completely before writing any code.
+>
+> **Amendments.** The project was renamed from its working name "irekeys" to "irekey" (ADR 0020). Invariants are referred to by descriptive names outside this document, instead of by their IDs (ADR 0021). Each amendment is explained in the ADR named next to it.
 
 ---
 
@@ -8,7 +10,7 @@
 
 ### 0.1 Reading order
 
-1. Sections 1–7 define *what* irekeys is and the rules it never breaks.
+1. Sections 1–7 define *what* irekey is and the rules it never breaks.
 2. Sections 8–19 define *how* it works.
 3. Sections 20–22 define the engineering standard of the repository.
 4. Section 23 defines the order of work (milestones) and the acceptance criteria of each one.
@@ -32,7 +34,7 @@ Every design point carries one of these labels, explicitly or by section:
 4. **Never invent APIs.** Do not invent function names, flags, config keys, systemd directives or library behavior. Check with `go doc <pkg>.<Symbol>`, the module source, or official documentation. When something cannot be checked offline, write `// Verify: <what and where>` next to it and list it in the pull request description.
 5. **Dependencies are a decision.** Adding a module requires a one-paragraph justification in the commit message (why, alternatives, license, maintenance status) and must pass the license check (Section 21.8). Prefer the standard library.
 6. **English only.** Code, identifiers, comments, commit messages, CLI output, logs, documentation, test names and fixtures are in English. No word from any other natural language appears anywhere in the repository, except the Japanese terms explained in Section 1.2.
-7. **No real-world data.** No real customer, site or employer names (names of third-party tools, products and services that irekeys uses or learns from are fine), site names, IP addresses, MAC addresses, host keys or credentials in the repository. Use the documentation ranges `192.0.2.0/24`, `198.51.100.0/24`, `203.0.113.0/24`, `2001:db8::/32`, the domain `example.com`, locally administered MAC addresses (`02:00:00:xx:xx:xx`), loopback addresses, and fictional names (`acme`, `globex`, `initech`).
+7. **No real-world data.** No real customer, site or employer names (names of third-party tools, products and services that irekey uses or learns from are fine), site names, IP addresses, MAC addresses, host keys or credentials in the repository. Use the documentation ranges `192.0.2.0/24`, `198.51.100.0/24`, `203.0.113.0/24`, `2001:db8::/32`, the domain `example.com`, locally administered MAC addresses (`02:00:00:xx:xx:xx`), loopback addresses, and fictional names (`acme`, `globex`, `initech`).
 8. **No employer reference.** The project is generic infrastructure tooling. Never name or describe any specific employer, product or industry customer in code, docs or commit messages.
 9. **Ask before** (a) changing anything labeled Decided, (b) changing a contract in Section 22, (c) adding a network listener, (d) adding anything that runs permanently on a device, (e) adding a dependency with a non-permissive license.
 10. **Create and maintain `CLAUDE.md`** at the repository root during M0: a short summary of these rules, the build/test commands, and pointers to this document's sections. Keep it under 150 lines.
@@ -44,18 +46,18 @@ Every design point carries one of these labels, explicitly or by section:
 
 ### 1.1 One-line description
 
-**irekeys manages the same software running on many offline embedded Linux computers, where every customer needs small local differences, and delivers changes over SSH with automatic rollback.**
+**irekey manages the same software running on many offline embedded Linux computers, where every customer needs small local differences, and delivers changes over SSH with automatic rollback.**
 
 ### 1.2 Name and metaphor (Decided)
 
-`irekeys` blends two ideas:
+`irekey` blends two ideas:
 
 - **irekae** (入換): in Japanese railway operations, *shunting* — moving rolling stock between the tracks of a yard to regroup and form trains. Written 入れ替え, the same reading also means "swap" or "replacement", which is what an update does to a device.
-- **keys**: nothing is switched without the right keys. The device's pinned SSH host key proves the target, and signing keys authorize the bundle.
+- **key**: nothing is switched without the right key. The device's pinned SSH host key proves the target, and a trusted signing key authorizes the bundle.
 
-Taglines: *No switch without the right key.* · *Every device is a train. irekeys is the yard where you inspect, switch and dispatch them.*
+Taglines: *No switch without the right key.* · *Every device is a train. irekey is the yard where you inspect, switch and dispatch them.*
 
-| Railway | irekeys |
+| Railway | irekey |
 |---|---|
 | train | device |
 | cars | the components on the device |
@@ -72,11 +74,11 @@ Taglines: *No switch without the right key.* · *Every device is a train. irekey
 
 | Item | Value |
 |---|---|
-| Repository | `github.com/hitoshyamamoto/irekeys` (public) |
-| Go module | `github.com/hitoshyamamoto/irekeys` |
+| Repository | `github.com/hitoshyamamoto/irekey` (public) |
+| Go module | `github.com/hitoshyamamoto/irekey` |
 | Language | Go (use the Go version of the maintainer's other Go projects: `go 1.27` in `go.mod`; Verify it is the current stable release) |
 | License | MIT, `Copyright (c) 2026 Hitoshi Yamamoto`; every source file starts with `// SPDX-License-Identifier: MIT` |
-| Binaries | `irekeys` (operator machine) and `irekeys-exec` (device-side executor) |
+| Binaries | `irekey` (operator machine) and `irekey-exec` (device-side executor) |
 | Maintainer | `@hitoshyamamoto` (sole maintainer today) |
 
 ---
@@ -93,7 +95,7 @@ A team maintains a product made of several components (for example two backend s
 - was historically modified **by hand over SSH**, so nobody knows exactly what runs where (drift);
 - costs a long, expensive trip to the site if it becomes unreachable after an update.
 
-### 2.2 What irekeys changes
+### 2.2 What irekey changes
 
 From "200 hand-edited copies" to **one base code + explicit, reviewed per-customer adjustments + controlled delivery**:
 
@@ -108,7 +110,7 @@ Delivery with rollback already exists in other tools. The differentiating capabi
 
 ### 2.4 Prior art to learn from, not to depend on (Default)
 
-| Tool | What irekeys borrows | Why it is not used directly |
+| Tool | What irekey borrows | Why it is not used directly |
 |---|---|---|
 | Steam (SteamPipe) | separate *transfer* from *activation*; channels; show transfer size before release | consumer distribution platform |
 | Mender (standalone mode) | install → verify → commit-or-revert pattern | requires an agent and, for full rollback, bootloader/partition integration |
@@ -169,28 +171,28 @@ VPN management (Decided: out of scope, the maintainer's responsibility); Windows
 
 | ID | Requirement |
 |---|---|
-| FR-01 | `irekeys init` creates a deployment repository and sets up the vault in one guided flow. |
-| FR-02 | `irekeys adopt <address>` registers a device from an address and a credential; everything else (OS, architecture, MAC addresses, runtime, component locations) is discovered. |
+| FR-01 | `irekey init` creates a deployment repository and sets up the vault in one guided flow. |
+| FR-02 | `irekey adopt <address>` registers a device from an address and a credential; everything else (OS, architecture, MAC addresses, runtime, component locations) is discovered. |
 | FR-03 | Adoption pins the device's SSH host key. Every later connection is refused if the host key differs; state-changing operations are also refused if the MAC address set differs (I1). |
 | FR-04 | Adoption takes a read-only snapshot: a manifest of file hashes, without copying code. Data, logs, caches, virtual environments and files marked `secret` are excluded. Adoption never uses sudo; its only permitted write on the device is a temporary directory under the SSH account's home, removed in the same connection. |
 | FR-05 | Batch adoption from a CSV file. |
 | FR-06 | For each component on each device, find the closest base version (exact when `.git` exists; by similarity otherwise) and extract the delta. |
 | FR-07 | Split deltas into hunks, cluster identical hunks across devices, and suggest a destination for each cluster: configuration value, upstream (base), profile patch, customer patch, device patch, or discard. The developer confirms every decision. |
-| FR-08 | `irekeys edit` materializes "the code of customer X" as a normal working tree; `irekeys save` regenerates the patch stack and opens a merge request. The user never has to touch `.patch` files. |
-| FR-09 | `irekeys rebase` re-applies every patch stack onto a new base and classifies each variant as `clean`, `fuzzy` (applied with offset/fuzz, needs review) or `conflict`. |
+| FR-08 | `irekey edit` materializes "the code of customer X" as a normal working tree; `irekey save` regenerates the patch stack and opens a merge request. The user never has to touch `.patch` files. |
+| FR-09 | `irekey rebase` re-applies every patch stack onto a new base and classifies each variant as `clean`, `fuzzy` (applied with offset/fuzz, needs review) or `conflict`. |
 | FR-10 | Release sets: tested combinations of component versions delivered together; compatibility validated by the dependency graph. |
 | FR-11 | Groups: reusable selections of devices. Waves: ordered rollout stages that reference a group. |
-| FR-12 | `irekeys plan` shows, per device, what changes and **how many bytes will be transferred**, before anything is applied. |
+| FR-12 | `irekey plan` shows, per device, what changes and **how many bytes will be transferred**, before anything is applied. |
 | FR-13 | Transfer and activation are separate steps that can happen in different connections. |
 | FR-14 | Canary first in every multi-device rollout; failure budget; concurrency limit; bandwidth limit. |
 | FR-15 | Automatic rollback when health checks fail, when the operator cannot reconnect and confirm, and after a reboot during the confirmation window. |
 | FR-16 | Per-device pending queue: work that could not run because a device was unreachable resumes at the next connection. |
-| FR-17 | Every connection compares the device with its expected state. Drift is reported and offered for triage; irekeys never decides on its own. |
+| FR-17 | Every connection compares the device with its expected state. Drift is reported and offered for triage; irekey never decides on its own. |
 | FR-18 | History of every delivery: who, what, when, whether it passed the bench, result per device. |
 | FR-19 | Device logs are collected automatically when a health check fails. |
-| FR-20 | `irekeys ui` opens a local read-only web interface. |
-| FR-21 | `irekeys lab up` starts a complete simulated fleet in containers. |
-| FR-22 | `irekeys doctor` checks the operator machine (git version, vault access, deployment repository state, clock) and explains every problem with a fix. |
+| FR-20 | `irekey ui` opens a local read-only web interface. |
+| FR-21 | `irekey lab up` starts a complete simulated fleet in containers. |
+| FR-22 | `irekey doctor` checks the operator machine (git version, vault access, deployment repository state, clock) and explains every problem with a fix. |
 
 ### 4.2 Non-functional requirements
 
@@ -205,7 +207,7 @@ VPN management (Decided: out of scope, the maintainer's responsibility); Windows
 | NFR-07 | Reproducible builds | anyone can rebuild a release from the tag and obtain the published `SHA256SUMS` |
 | NFR-08 | Test coverage | ≥ 80 % statement coverage (same floor as the maintainer's other Go projects) |
 | NFR-09 | Scale | 500 devices, 10 components each, 50 customers, in the deployment repository and the graph without noticeable delay (< 2 s for `plan` on a laptop, excluding network) |
-| NFR-10 | No telemetry | irekeys never contacts any server except the devices, the configured forge, and the configured vault |
+| NFR-10 | No telemetry | irekey never contacts any server except the devices, the configured forge, and the configured vault |
 
 ---
 
@@ -239,9 +241,9 @@ Use every term exactly as defined, in code, docs, CLI output and logs. The full 
 | **activation** | Stopping, switching, starting and checking a staged release on a device. |
 | **confirmation** | The operator reconnecting after activation and telling the device to keep the new release. |
 | **guard** | The persistent systemd timer/service pair that rolls back an unconfirmed activation. |
-| **executor** | `irekeys-exec`, the device-side binary that performs state-changing work. Uploaded by irekeys; runs only when invoked by irekeys or by an armed guard. |
+| **executor** | `irekey-exec`, the device-side binary that performs state-changing work. Uploaded by irekey; runs only when invoked by irekey or by an armed guard. |
 | **bench device** | A device used for hardware tests before field delivery. Labeled `labels.bench: "true"`. |
-| **lab** | The containerized simulated fleet started by `irekeys lab up`. |
+| **lab** | The containerized simulated fleet started by `irekey lab up`. |
 
 Forbidden synonyms (never use): "fleet repository", "client" (for customer), "equipment", "plant", "agent" (for the executor), "deploy key" (ambiguous), "backend" for a provider/plugin (use "provider"), "tag" for anything but a git tag (use "label" for device labels).
 
@@ -271,9 +273,9 @@ Edge kinds (Default): `belongs-to` (site → customer, device → site), `uses-p
 
 The graph is built in memory from the deployment repository on every run (no database). It must answer:
 
-1. **Impact:** "if I change X (a layer key, a patch, a profile, a base version), which devices and variants are affected?" → `irekeys graph impact <ref>`
-2. **Validity:** "is this release set compatible on these devices?" (dependency ranges satisfied, no cycles, every referenced entity exists, platform requirements met) → `irekeys graph check`
-3. **Provenance:** "where did this configuration value come from on this device?" → `irekeys graph why <device> <component> <key.path>`
+1. **Impact:** "if I change X (a layer key, a patch, a profile, a base version), which devices and variants are affected?" → `irekey graph impact <ref>`
+2. **Validity:** "is this release set compatible on these devices?" (dependency ranges satisfied, no cycles, every referenced entity exists, platform requirements met) → `irekey graph check`
+3. **Provenance:** "where did this configuration value come from on this device?" → `irekey graph why <device> <component> <key.path>`
 
 The graph is required from the first milestone that writes layers (M3). Visualization is a later feature.
 
@@ -281,30 +283,30 @@ The graph is required from the first milestone that writes layers (M3). Visualiz
 
 ## 7. Invariants (never broken)
 
-Each invariant has an ID used in code comments (`// Invariant I4`), tests and docs. Tests named `TestInvariant_I<N>_...` must exist for every invariant.
+Each invariant has an ID (I1–I20) and a descriptive name. The IDs are used only inside this specification, to cross-reference its sections. Everywhere else (code comments, test names, public documentation, commit messages and pull requests) an invariant is referred to by its name (ADR 0021). Code comments that explain how code upholds an invariant use the same name, `// Safety (DataSeparation): ...`, and the tests that protect an invariant are named after it, `Test<Name>_<behavior>` (for example `TestDataSeparation_WriterRedactsAcrossChunkBoundaries`). Every invariant has at least one such test.
 
-| ID | Invariant |
-|---|---|
-| **I1 Pinned identity** | No operation runs on a device unless it presents its pinned SSH host key; state-changing operations additionally require its MAC address set to match. Every bundle is bound to one device ID and host-key fingerprint, and the executor re-checks the binding. |
-| **I2 Signed only** | The executor applies only bundles whose manifest signature verifies against a key in the device's trusted-signers file, and whose every file matches its digest. |
-| **I3 Snapshot before change** | No transfer or activation runs without a snapshot taken in the same connection. Untriaged drift blocks updates. Confirmation and rollback require only the identity check of I1; drift found at that point is reported, never blocking. In multi-device operations, a device with new drift since its last triage is skipped. |
-| **I4 Atomic switch** | A device switches release sets with one atomic `rename(2)` of the `current` symlink. No state mixes components from two release sets. |
-| **I5 Explicit point of no return** | Before the switch, abort leaves the device unchanged. After the switch, any failure triggers rollback. |
-| **I6 Connection-independent** | Device-side state changes run detached from the SSH session. A dropped connection never leaves a half-applied device. |
-| **I7 Crash-safe** | Every executor step is idempotent and journaled (intent before, outcome after, each followed by `fsync`). After power loss, recovery deterministically ends on the previous release or completes the rollback. |
-| **I8 Functional health** | Success requires every critical health check to pass, including data freshness for data-producing components. Otherwise, automatic rollback. Checks that already failed before the update are reported and excluded (health is judged as regression against a baseline). |
-| **I9 Whole-set rollback** | Rollback restores the previous release set as a whole: code, images and managed configuration. Databases are restored only when a migration was declared irreversible. |
-| **I10 Data untouched** | Paths declared as `data_paths` by a component are never written, moved or deleted by irekeys, and are excluded from snapshots. |
-| **I11 Disk budget** | No transfer starts without verified free space and inodes for staging, backup and a safety margin of `max(10 % of the filesystem, 1 GiB)` (Default). |
-| **I12 Downtime bound** | In multi-device operations, devices whose estimated downtime exceeds the product maximum are skipped. Single-device mode requires interactive confirmation. |
-| **I13 Failure budget** | A wave halts when its failure budget is exceeded. In-flight activations finish; no new ones start. |
-| **I14 Data separation** | No plaintext secret in the deployment repository, in logs, in CLI output or in the local cache. No customer data in the public repository. |
-| **I15 Path back** | An activation is kept only after the operator opens a **new** SSH connection and confirms. The guard rolls back if confirmation does not arrive within the window or if the device reboots before confirmation. The guard is armed before the point of no return. |
-| **I16 Nothing permanent running** | Outside an activation window, no irekeys process, timer or listener exists on the device. The only persistent artifacts are the files under `/opt/irekeys`, `/var/lib/irekeys` and `/etc/opt/irekeys` (Section 11.1), plus two documented exceptions: the symlinks that replace legacy component paths (Section 11.1) and the container images loaded into the local Docker image store (retention: images of the current and previous release sets). |
-| **I17 One operation per device** | State-changing operations hold a device lease from the first transfer step until the update reaches a terminal state (`committed`, `rolled-back`, `unchanged`): a lease record in the journal, plus `flock` on `/var/lib/irekeys/lock` while an executor process runs. A second operator is refused with `ENG-002` (exit 14), not queued. Read-only operations (snapshot, status, diff) take no lease and report an active lease when they see one. |
-| **I18 Humans decide drift** | irekeys never overwrites or absorbs drift without an explicit, recorded human decision. |
-| **I19 No flag disables a safety check** | The only overrides are interactive confirmations in single-device mode (overwriting triaged drift, exceeding the downtime bound, downgrading). They are recorded in history. |
-| **I20 Approved state only** | Field devices (not `bench`, not `lab`) receive only release sets and layers from a deployment-repository commit that is clean and reachable from the remote protected branch. |
+| ID | Name | Invariant |
+|---|---|---|
+| **I1 Pinned identity** | `PinnedIdentity` | No operation runs on a device unless it presents its pinned SSH host key; state-changing operations additionally require its MAC address set to match. Every bundle is bound to one device ID and host-key fingerprint, and the executor re-checks the binding. |
+| **I2 Signed only** | `SignedOnly` | The executor applies only bundles whose manifest signature verifies against a key in the device's trusted-signers file, and whose every file matches its digest. |
+| **I3 Snapshot before change** | `SnapshotBeforeChange` | No transfer or activation runs without a snapshot taken in the same connection. Untriaged drift blocks updates. Confirmation and rollback require only the identity check of I1; drift found at that point is reported, never blocking. In multi-device operations, a device with new drift since its last triage is skipped. |
+| **I4 Atomic switch** | `AtomicSwitch` | A device switches release sets with one atomic `rename(2)` of the `current` symlink. No state mixes components from two release sets. |
+| **I5 Explicit point of no return** | `ExplicitPointOfNoReturn` | Before the switch, abort leaves the device unchanged. After the switch, any failure triggers rollback. |
+| **I6 Connection-independent** | `ConnectionIndependent` | Device-side state changes run detached from the SSH session. A dropped connection never leaves a half-applied device. |
+| **I7 Crash-safe** | `CrashSafe` | Every executor step is idempotent and journaled (intent before, outcome after, each followed by `fsync`). After power loss, recovery deterministically ends on the previous release or completes the rollback. |
+| **I8 Functional health** | `FunctionalHealth` | Success requires every critical health check to pass, including data freshness for data-producing components. Otherwise, automatic rollback. Checks that already failed before the update are reported and excluded (health is judged as regression against a baseline). |
+| **I9 Whole-set rollback** | `WholeSetRollback` | Rollback restores the previous release set as a whole: code, images and managed configuration. Databases are restored only when a migration was declared irreversible. |
+| **I10 Data untouched** | `DataUntouched` | Paths declared as `data_paths` by a component are never written, moved or deleted by irekey, and are excluded from snapshots. |
+| **I11 Disk budget** | `DiskBudget` | No transfer starts without verified free space and inodes for staging, backup and a safety margin of `max(10 % of the filesystem, 1 GiB)` (Default). |
+| **I12 Downtime bound** | `DowntimeBound` | In multi-device operations, devices whose estimated downtime exceeds the product maximum are skipped. Single-device mode requires interactive confirmation. |
+| **I13 Failure budget** | `FailureBudget` | A wave halts when its failure budget is exceeded. In-flight activations finish; no new ones start. |
+| **I14 Data separation** | `DataSeparation` | No plaintext secret in the deployment repository, in logs, in CLI output or in the local cache. No customer data in the public repository. |
+| **I15 Path back** | `PathBack` | An activation is kept only after the operator opens a **new** SSH connection and confirms. The guard rolls back if confirmation does not arrive within the window or if the device reboots before confirmation. The guard is armed before the point of no return. |
+| **I16 Nothing permanent running** | `NothingPermanentRunning` | Outside an activation window, no irekey process, timer or listener exists on the device. The only persistent artifacts are the files under `/opt/irekey`, `/var/lib/irekey` and `/etc/opt/irekey` (Section 11.1), plus two documented exceptions: the symlinks that replace legacy component paths (Section 11.1) and the container images loaded into the local Docker image store (retention: images of the current and previous release sets). |
+| **I17 One operation per device** | `OneOperationPerDevice` | State-changing operations hold a device lease from the first transfer step until the update reaches a terminal state (`committed`, `rolled-back`, `unchanged`): a lease record in the journal, plus `flock` on `/var/lib/irekey/lock` while an executor process runs. A second operator is refused with `ENG-002` (exit 14), not queued. Read-only operations (snapshot, status, diff) take no lease and report an active lease when they see one. |
+| **I18 Humans decide drift** | `HumansDecideDrift` | irekey never overwrites or absorbs drift without an explicit, recorded human decision. |
+| **I19 No flag disables a safety check** | `NoFlagDisablesSafetyCheck` | The only overrides are interactive confirmations in single-device mode (overwriting triaged drift, exceeding the downtime bound, downgrading). They are recorded in history. |
+| **I20 Approved state only** | `ApprovedStateOnly` | Field devices (not `bench`, not `lab`) receive only release sets and layers from a deployment-repository commit that is clean and reachable from the remote protected branch. |
 
 
 ---
@@ -315,22 +317,22 @@ Each invariant has an ID used in code comments (`// Invariant I4`), tests and do
 
 ```
 ┌──────────────────────── Operator machine (developer laptop) ────────────────────────┐
-│  irekeys (single static binary)                                                     │
+│  irekey (single static binary)                                                      │
 │   ├─ CLI (cobra)  ── same service layer ──  Web UI (embedded, 127.0.0.1 only)       │
 │   ├─ deployment repository working copy (git)                                        │
 │   ├─ component repositories (git clones, cache)                                      │
 │   ├─ local state (SQLite: jobs, progress, pending queue, snapshot & transfer cache)  │
 │   ├─ vault provider (local age file | Bitwarden CLI)                                 │
-│   └─ embedded irekeys-exec binaries (linux/amd64, arm64, armv7)                      │
+│   └─ embedded irekey-exec binaries (linux/amd64, arm64, armv7)                       │
 └───────────────┬───────────────────────────────────────────────┬─────────────────────┘
                 │ SSH over customer VPN (out of scope)          │ HTTPS (optional)
                 ▼                                               ▼
 ┌──────────── Device (one per site, ×200+) ────────────┐   ┌──── Forge (optional) ────┐
 │ sshd (existing)                                       │   │ GitLab / GitHub          │
-│ /opt/irekeys/releases/<id>/<component>/  current ->   │   │ merge requests, approval │
-│ /var/lib/irekeys/ journal, staging, blobs, lock       │   │ CI runs `irekeys ci`     │
-│ /etc/opt/irekeys/ identity, trusted signers           │   └──────────────────────────┘
-│ irekeys-exec (uploaded, content-addressed, on demand) │
+│ /opt/irekey/releases/<id>/<component>/  current ->    │   │ merge requests, approval │
+│ /var/lib/irekey/ journal, staging, blobs, lock        │   │ CI runs `irekey ci`      │
+│ /etc/opt/irekey/ identity, trusted signers            │   └──────────────────────────┘
+│ irekey-exec (uploaded, content-addressed, on demand)  │
 │ guard unit (exists only during an activation window)  │
 │ components under systemd or Docker Compose            │
 └───────────────────────────────────────────────────────┘
@@ -347,15 +349,15 @@ Each invariant has an ID used in code comments (`// Invariant I4`), tests and do
 7. **Local state in SQLite** with the pure-Go driver `modernc.org/sqlite` (Default; Verify current status and license). Only operational state lives there; anything another developer needs lives in the deployment repository.
 8. **YAML for human-edited files, validated with JSON Schema** (`github.com/santhosh-tekuri/jsonschema/v6`, Verify). YAML library: `go.yaml.in/yaml/v3`, the maintained successor of the archived `gopkg.in/yaml.v3` (Verify). Unknown keys are errors.
 9. **Web UI embedded with `embed`**, server-rendered `html/template` + vendored htmx, no Node toolchain in the build (Default; Section 18).
-10. **Signatures in the OpenSSH signature format (SSHSIG)** with namespace `irekeys-bundle@v1`, using developers' existing SSH keys (agent or hardware token), verified on the device against an `allowed_signers`-style trust file (Default). Library: `github.com/hiddeco/sshsig` (Apache-2.0, Verify current version) or an in-repo implementation of the published SSHSIG format if the library is unmaintained.
+10. **Signatures in the OpenSSH signature format (SSHSIG)** with namespace `irekey-bundle@v1`, using developers' existing SSH keys (agent or hardware token), verified on the device against an `allowed_signers`-style trust file (Default). Library: `github.com/hiddeco/sshsig` (Apache-2.0, Verify current version) or an in-repo implementation of the published SSHSIG format if the library is unmaintained.
 
 ### 8.3 Repository layout (public repository)
 
 ```
-irekeys/
+irekey/
 ├── cmd/
-│   ├── irekeys/                 # operator CLI entry point (main only; wiring)
-│   └── irekeys-exec/            # device executor entry point
+│   ├── irekey/                  # operator CLI entry point (main only; wiring)
+│   └── irekey-exec/             # device executor entry point
 ├── internal/
 │   ├── app/                     # service layer used by CLI and UI; no I/O formatting
 │   ├── cli/                     # cobra commands, flags, human and --json output
@@ -414,9 +416,9 @@ irekeys/
 │   └── schema-versions.txt      # kept current by a test
 ├── examples/
 │   ├── deployment-repo/         # a complete fictional deployment repository
-│   │   ├── .github/workflows/irekeys.yml
+│   │   ├── .github/workflows/irekey.yml
 │   │   └── .gitlab-ci.yml
-│   └── component/.irekeys/      # a sample component manifest
+│   └── component/.irekey/       # a sample component manifest
 ├── scripts/                     # guard scripts used by CI (Section 21.4)
 ├── testdata/compat/             # compatibility zoo (bundles, journals, repo files per version)
 ├── .github/                     # workflows, templates, CODEOWNERS, allowed_signers, dependabot
@@ -439,8 +441,8 @@ pure packages (no I/O): model, layers, variant, graph, schema, errs, redact
 ```
 
 - Pure packages import no I/O package and are tested exhaustively with table tests, property tests and fuzzing.
-- Only `cmd/irekeys` and `cli` may import `ui` (to start the server); nothing imports `cli`. The UI never calls `transport` directly; it calls `app`.
-- `cmd/irekeys-exec` must not import any operator-side package (`app`, `cli`, `ui`, `vault`, `forge`, `state`, `deployrepo`). A test enforces this with `go list -deps`.
+- Only `cmd/irekey` and `cli` may import `ui` (to start the server); nothing imports `cli`. The UI never calls `transport` directly; it calls `app`.
+- `cmd/irekey-exec` must not import any operator-side package (`app`, `cli`, `ui`, `vault`, `forge`, `state`, `deployrepo`). A test enforces this with `go list -deps`.
 - The executor binary must stay small: target < 8 MiB stripped for linux/amd64 (Default). A CI check fails above 12 MiB.
 
 ---
@@ -455,13 +457,13 @@ With 200 long-lived branches, every base fix becomes 200 merges and divergence o
 
 Order, lowest to highest priority (Default):
 
-1. **base** — the component's defaults: `.irekeys/config.defaults.yaml` in the component repository, at the base tag.
+1. **base** — the component's defaults: `.irekey/config.defaults.yaml` in the component repository, at the base tag.
 2. **profiles** — in the order listed in the device file (`profiles: [iec104, low-bandwidth]`).
 3. **customer** — `customers/<customer>/config/<component>.yaml`.
 4. **site** — `customers/<customer>/sites/<site>/config/<component>.yaml`.
 5. **device** — `devices/<device>.config/<component>.yaml`.
 
-Merge semantics (Default): maps merge key by key, recursively; lists are replaced as a whole; scalars are replaced; an explicit `null` deletes the key. A key that does not exist in the component's config schema (`.irekeys/config.schema.json`) is an error. Every merged value carries its provenance (layer file, line) so `graph why` can explain it.
+Merge semantics (Default): maps merge key by key, recursively; lists are replaced as a whole; scalars are replaced; an explicit `null` deletes the key. A key that does not exist in the component's config schema (`.irekey/config.schema.json`) is an error. Every merged value carries its provenance (layer file, line) so `graph why` can explain it.
 
 Secrets are never values in layers. A value of the form `secret://<item-reference>` is resolved from the vault at transfer time, written on the device with mode `0600`, and never cached in plaintext on the laptop.
 
@@ -474,7 +476,7 @@ For changes that cannot be expressed as configuration.
 - Stored as `git format-patch` files plus an ordered `series` file (quilt-style), under `patches/<component>/<scope>/` where scope is `profile/<profile>`, `customer/<customer>` or `device/<device>`.
 - Application order: profile stacks (in profile order) → customer stack → device stack.
 - Applied with `git am --3way` onto a clean checkout of the base tag in a temporary worktree.
-- The total number of changed lines in customer and device patches is reported by `irekeys status --debt` and tracked as technical debt (Default).
+- The total number of changed lines in customer and device patches is reported by `irekey status --debt` and tracked as technical debt (Default).
 - A change that spans several components is recorded as one **change set** (same `Change-Id:` trailer in each patch) and is applied, reverted and reported as a unit (Default).
 
 ### 9.4 Variants
@@ -488,7 +490,7 @@ For changes that cannot be expressed as configuration.
 ### 9.5 Release sets
 
 ```yaml
-schema: irekeys/release-set/v1
+schema: irekey/release-set/v1
 name: product
 version: 2026.11.0
 channel: stable                 # only "stable" in v1
@@ -512,7 +514,7 @@ max_downtime: 5m
 
 ```yaml
 # groups/early-adopters.yaml
-schema: irekeys/group/v1
+schema: irekey/group/v1
 select:
   devices: [acme-north-01]
   labels: { ring: early }          # AND within a selector
@@ -523,7 +525,7 @@ exclude:
 
 ```yaml
 # rollouts/r-20261110-a1b2.yaml
-schema: irekeys/rollout/v1
+schema: irekey/rollout/v1
 release_set: product@2026.11.0
 canary: { device: acme-north-01, soak: 30m }   # default: first device of the first wave
 waves:
@@ -546,53 +548,53 @@ Groups select; they never carry configuration (Default). Groups are evaluated at
 
 Every workflow below must be exercised by an automated lab scenario (Section 19.4).
 
-### 10.1 First run: `irekeys init` (target: < 20 s of the 60-second budget)
+### 10.1 First run: `irekey init` (target: < 20 s of the 60-second budget)
 
 1. Ask: "Do you already use a password manager?" Options: Bitwarden/Vaultwarden (via `bw`), or **create a local encrypted vault now**.
 2. Local vault: an age-encrypted file (`filippo.io/age`, scrypt passphrase recipient) at the user config directory. Never implement custom cryptography. Lock the vault again after each operation that unlocked it (Default).
 3. Bitwarden: detect `bw`, check `bw status`, unlock with the session key in memory only, `bw lock` when done (Verify current `bw` CLI commands and JSON output).
-4. Create or clone the deployment repository (`irekeys init --repo <path|url>`), write `irekeys.yaml` with `schema: irekeys/repo/v1`, commit.
-5. Print the next command (`irekeys adopt <address> --customer <c> --site <s>`).
+4. Create or clone the deployment repository (`irekey init --repo <path|url>`), write `irekey.yaml` with `schema: irekey/repo/v1`, commit.
+5. Print the next command (`irekey adopt <address> --customer <c> --site <s>`).
 
-When a second developer appears (a second distinct `author` in the deployment repository history), suggest migrating to a shared vault with `irekeys vault migrate` (Default).
+When a second developer appears (a second distinct `author` in the deployment repository history), suggest migrating to a shared vault with `irekey vault migrate` (Default).
 
-### 10.2 Adoption: `irekeys adopt <address> --customer C --site S [--name N] [--user U] [--port P] [--jump SPEC]`
+### 10.2 Adoption: `irekey adopt <address> --customer C --site S [--name N] [--user U] [--port P] [--jump SPEC]`
 
 1. Resolve credentials (vault, SSH agent, `~/.ssh/config`).
 2. Connect. Show the host-key fingerprint (SHA256), hostname and MAC addresses; ask the human to confirm (trust on first use). Refuse identities already enrolled for another device (cloned images): `ID-003`.
 3. Discover facts with read-only commands run with `LC_ALL=C` (`/etc/os-release`, `uname -m`, `ip -j link` or `/sys/class/net/*/address`, `systemctl --version`, `docker compose version`, free space, inodes, clock). Never parse localized text.
 4. Discover components (Default heuristics, in order): Docker Compose projects (`docker compose ls --format json`; if the Docker socket is not accessible to the SSH account, record `compose: inaccessible` and ask the layout question instead; never escalate), systemd units with a `WorkingDirectory=` or `ExecStart=` under configured roots, git working trees under configured roots (default roots: `/opt`, `/srv`, `/home/*/apps`). Unknown layouts trigger one question; the answer is stored in the device file so it is never asked again.
-5. Snapshot without uploading anything: `find ... -printf` + `sha256sum` (coreutils) over discovered component paths, excluding `data_paths`, logs, caches, `node_modules`, `__pycache__`, `.venv`, `venv`, `*.pyc`, `.git/objects`. If the tools are missing, upload the executor to a temporary directory in the SSH account's home, run `irekeys-exec scan` unprivileged, and remove it afterwards. Adoption never uses sudo and never writes outside that temporary directory.
+5. Snapshot without uploading anything: `find ... -printf` + `sha256sum` (coreutils) over discovered component paths, excluding `data_paths`, logs, caches, `node_modules`, `__pycache__`, `.venv`, `venv`, `*.pyc`, `.git/objects`. If the tools are missing, upload the executor to a temporary directory in the SSH account's home, run `irekey-exec scan` unprivileged, and remove it afterwards. Adoption never uses sudo and never writes outside that temporary directory.
 6. Write `devices/<device>.yaml`, regenerate `known_hosts`, commit locally (the developer pushes and opens a merge request; adoption is a repository change like any other).
 7. Start background analysis (Section 10.4) and return. Adoption is complete when steps 1–6 succeed.
 
-Batch: `irekeys adopt --csv devices.csv` with columns `address,customer,site,name,user,port,jump,host_key_sha256`; confirmations are collected first, then devices are adopted concurrently. A pre-supplied fingerprint (`host_key_sha256` column or `--host-key SHA256:...` flag), obtained out of band, counts as the human confirmation; a mismatch is `ID-001`. This is how the lab and CI adopt without prompts.
+Batch: `irekey adopt --csv devices.csv` with columns `address,customer,site,name,user,port,jump,host_key_sha256`; confirmations are collected first, then devices are adopted concurrently. A pre-supplied fingerprint (`host_key_sha256` column or `--host-key SHA256:...` flag), obtained out of band, counts as the human confirmation; a mismatch is `ID-001`. This is how the lab and CI adopt without prompts.
 
 ### 10.3 Snapshot, status and drift
 
-- `irekeys snapshot <device|--group G>` — read-only; stores the latest manifest in `snapshots/<device>/latest.json.zst` and full history in local state. Only `adopt` and `snapshot` write snapshots into the deployment repository; snapshots taken implicitly by other commands go to local state only, so they never leave the repository dirty (REPO-003).
-- `irekeys status [<device>|--group G|--rollout R]` — connects, reads the device journal, refreshes observed state, prints a matrix: device × component → expected variant, observed variant, drift, last result.
+- `irekey snapshot <device|--group G>` — read-only; stores the latest manifest in `snapshots/<device>/latest.json.zst` and full history in local state. Only `adopt` and `snapshot` write snapshots into the deployment repository; snapshots taken implicitly by other commands go to local state only, so they never leave the repository dirty (REPO-003).
+- `irekey status [<device>|--group G|--rollout R]` — connects, reads the device journal, refreshes observed state, prints a matrix: device × component → expected variant, observed variant, drift, last result.
 - Drift = files whose digest differs from the expected release (added, modified, removed, mode changed). Every connection, for any command, computes drift first (I3).
-- `irekeys diff <device> [<component>]` — shows the drift as a unified diff when the file content can be retrieved, otherwise as a digest list.
+- `irekey diff <device> [<component>]` — shows the drift as a unified diff when the file content can be retrieved, otherwise as a digest list.
 
 ### 10.4 Extraction and triage (the differentiator)
 
-Background analysis after adoption, and on demand with `irekeys extract <device|--all>`:
+Background analysis after adoption, and on demand with `irekey extract <device|--all>`:
 
 1. **Nearest base.** With `.git`: `git describe --tags`, merge-base with the component repository, plus uncommitted changes. Without `.git`: compare the device manifest with each base tag's file digests and pick the tag maximizing the Jaccard similarity of `(path, digest)` pairs; report the score and the runner-up.
 2. **Delta.** Fetch only the differing files (bounded, with a size limit per file and per device), compute the diff against the nearest base.
 3. **Hunks.** Split into hunks; normalize (line endings, trailing whitespace) and hash each hunk.
 4. **Cluster.** Group identical hunks across devices. A cluster present on most devices of a component suggests **upstream**; present on all devices of a profile or customer suggests **profile** or **customer patch**; inside a file declared as configuration with a key/value shape suggests **configuration value** (and the layer level that covers exactly the affected devices); unique to one device suggests **device patch**; generated or temporary files suggest **discard**.
-5. **Triage.** `irekeys triage <device|--cluster ID>` presents each cluster with the suggestion; the developer accepts, changes or postpones. Decisions are written to `triage/<device>/<snapshot>.yaml`, and the corresponding layer values or patches are generated in the deployment repository. Upstream items produce a branch in the component repository (`irekeys extract --upstream`) ready for a merge request.
+5. **Triage.** `irekey triage <device|--cluster ID>` presents each cluster with the suggestion; the developer accepts, changes or postpones. Decisions are written to `triage/<device>/<snapshot>.yaml`, and the corresponding layer values or patches are generated in the deployment repository. Upstream items produce a branch in the component repository (`irekey extract --upstream`) ready for a merge request.
 6. The core of triage is UI-agnostic (`internal/triage`), so the web UI can drive it later.
 
-Plug-and-play has a limit here (stated in the docs): classifying hunks and resolving patch conflicts require human judgment. irekeys guides, groups and suggests; it never decides alone (I18).
+Plug-and-play has a limit here (stated in the docs): classifying hunks and resolving patch conflicts require human judgment. irekey guides, groups and suggests; it never decides alone (I18).
 
 ### 10.5 Editing and maintaining adjustments
 
-- `irekeys edit <component> --customer C [--site S | --device D | --profile P]` — creates a worktree at `~/.cache/irekeys/workspaces/<component>/<scope>`, checks out the base tag, applies the stack(s) up to that scope as commits, enables `rerere`, prints the path. The developer edits with any editor.
-- `irekeys save` — regenerates the scope's patch stack from the worktree commits with `git format-patch`, rewrites `series`, recomputes affected variants, runs `graph check`, commits on a branch in the deployment repository and, if a forge is configured, opens a merge request with a summary (affected devices, `git range-diff` of the stack).
-- `irekeys rebase <component> --to <new-tag>` — re-applies every stack onto the new base in temporary worktrees, classifies each variant `clean | fuzzy | conflict`, writes refreshed patches for `clean` and `fuzzy` (fuzzy marked for review), and opens one merge request. `conflict` variants are listed with the command to resolve each one (`irekeys edit ...`).
+- `irekey edit <component> --customer C [--site S | --device D | --profile P]` — creates a worktree at `~/.cache/irekey/workspaces/<component>/<scope>`, checks out the base tag, applies the stack(s) up to that scope as commits, enables `rerere`, prints the path. The developer edits with any editor.
+- `irekey save` — regenerates the scope's patch stack from the worktree commits with `git format-patch`, rewrites `series`, recomputes affected variants, runs `graph check`, commits on a branch in the deployment repository and, if a forge is configured, opens a merge request with a summary (affected devices, `git range-diff` of the stack).
+- `irekey rebase <component> --to <new-tag>` — re-applies every stack onto the new base in temporary worktrees, classifies each variant `clean | fuzzy | conflict`, writes refreshed patches for `clean` and `fuzzy` (fuzzy marked for review), and opens one merge request. `conflict` variants are listed with the command to resolve each one (`irekey edit ...`).
 
 ### 10.6 Verification gates
 
@@ -601,24 +603,24 @@ Plug-and-play has a limit here (stated in the docs): classifying hunks and resol
 | V1 | Schema validation, cross-references, `graph check` | laptop and deployment-repository CI | always |
 | V2 | Every affected patch stack applies to its base | laptop and CI | always |
 | V3 | Every affected variant builds (component build recipe) | CI | always |
-| V4 | Simulation: deploy to lab devices with simulators, run health checks and component contract tests | deployment-repository CI (`irekeys ci`) on every merge request | always (Decided) |
+| V4 | Simulation: deploy to lab devices with simulators, run health checks and component contract tests | deployment-repository CI (`irekey ci`) on every merge request | always (Decided) |
 | V5 | Bench device | developer's choice | optional (Decided); result recorded; warning when the change touches `hardware_sensitive_paths` without a bench pass |
 | V6 | Canary | first step of every rollout | always |
 
-`irekeys ci` is the entry point for the deployment repository's own CI; ship templates in `examples/deployment-repo/` for GitHub Actions and GitLab CI.
+`irekey ci` is the entry point for the deployment repository's own CI; ship templates in `examples/deployment-repo/` for GitHub Actions and GitLab CI.
 
-### 10.7 Planning: `irekeys plan <release-set> (--device D | --group G | --rollout R)`
+### 10.7 Planning: `irekey plan <release-set> (--device D | --group G | --rollout R)`
 
 For each device: current and target release set, per-component variant change, configuration keys changed (with provenance), **bytes to transfer** (from the cached device manifest; exact value recomputed at transfer), estimated downtime, gates passed, blockers (drift, disk, platform, lock). `--json` for approvals. Plans are deterministic for the same inputs.
 
 ### 10.8 Delivery
 
-- `irekeys transfer <release-set> (--device D | --group G)` — pre-flight, upload executor if missing, content-addressed sync of missing blobs to staging, verify, prepare the release directory (hardlinks for unchanged files), load container images (`docker load`) without touching running containers. Nothing that runs changes.
-- `irekeys activate (--device D | --group G)` — arms the guard, runs hooks, stops, switches, starts, runs health checks, then the laptop reconnects and confirms (Section 11.4).
-- `irekeys deploy` = `transfer` + `activate` in one command.
-- `irekeys rollback <device>` — whole-set rollback to the previous release set.
-- `irekeys rollout run <rollout>` — executes the next eligible wave (canary first), honoring soak, concurrency, failure budget; idempotent (running it again continues). Also `rollout status`, `rollout pause` (no new activations; in-flight finish), `rollout resume`, `rollout revert [--wave N]`.
-- `irekeys pending [list|run]` — the per-device queue of work blocked by unreachability; any command that connects to a device first offers to run its pending items.
+- `irekey transfer <release-set> (--device D | --group G)` — pre-flight, upload executor if missing, content-addressed sync of missing blobs to staging, verify, prepare the release directory (hardlinks for unchanged files), load container images (`docker load`) without touching running containers. Nothing that runs changes.
+- `irekey activate (--device D | --group G)` — arms the guard, runs hooks, stops, switches, starts, runs health checks, then the laptop reconnects and confirms (Section 11.4).
+- `irekey deploy` = `transfer` + `activate` in one command.
+- `irekey rollback <device>` — whole-set rollback to the previous release set.
+- `irekey rollout run <rollout>` — executes the next eligible wave (canary first), honoring soak, concurrency, failure budget; idempotent (running it again continues). Also `rollout status`, `rollout pause` (no new activations; in-flight finish), `rollout resume`, `rollout revert [--wave N]`.
+- `irekey pending [list|run]` — the per-device queue of work blocked by unreachability; any command that connects to a device first offers to run its pending items.
 
 ### 10.9 History
 
@@ -632,14 +634,14 @@ Every delivery appends a summary to `history/<YYYY>/<rollout-or-update>.json` in
 ### 11.1 Layout (Default; follows the FHS conventions for add-on software)
 
 ```
-/opt/irekeys/
+/opt/irekey/
 ├── releases/<release-id>/<component>/   # code, images references, rendered config; read-only after preparation
 │                                        # release-id = desired digest of the device, display form d-<12 hex>,
 │                                        # so a configuration-only change also gets its own release directory
 ├── current -> releases/<release-id>     # replaced atomically: symlink to tmp name, then rename(2)
 ├── previous -> releases/<release-id>    # rollback target
-└── bin/<digest>/irekeys-exec            # content-addressed executor binaries (max 2 kept)
-/var/lib/irekeys/
+└── bin/<digest>/irekey-exec             # content-addressed executor binaries (max 2 kept)
+/var/lib/irekey/
 ├── lock                                 # flock target (I17)
 ├── journal.jsonl                        # update journal (I7)
 ├── staging/<update-id>/                 # incoming manifest, blobs, partial transfers
@@ -647,32 +649,32 @@ Every delivery appends a summary to `history/<YYYY>/<rollout-or-update>.json` in
 ├── backups/<update-id>/                 # hook-produced backups; retention: last 2
 ├── pending-confirmation                 # marker file present only during an activation window
 └── logs/<update-id>/                    # collected logs on failure (bounded)
-/etc/opt/irekeys/
+/etc/opt/irekey/
 ├── identity.json                        # device ID, host-key fingerprint, adoption time
-└── trusted-signers                      # allowed_signers-format list of public keys (namespace irekeys-bundle@v1)
+└── trusted-signers                      # allowed_signers-format list of public keys (namespace irekey-bundle@v1)
 # identity.json and trusted-signers are written by the first state-changing operation (first transfer),
-# from the `signers` list in the deployment repository's irekeys.yaml at an approved commit (I20).
+# from the `signers` list in the deployment repository's irekey.yaml at an approved commit (I20).
 # Adoption is read-only and never creates them.
-/etc/systemd/system/irekeys-guard-<update-id>.{service,timer}   # exist only during an activation window
+/etc/systemd/system/irekey-guard-<update-id>.{service,timer}   # exist only during an activation window
 ```
 
 - `releases/` must be on the same filesystem as `staging/` and `blobs/` (hardlinks and atomic rename). If not, refuse with `PLT-003`.
 - Retention: current + previous release sets; executor binaries: current + previous; backups: last 2.
-- First managed deployment converts the legacy layout: original component paths become symlinks into `/opt/irekeys/current/<component>/`, so existing systemd units and compose files keep working. This conversion is rehearsed in the lab and on the bench before any field device (`PLT-006` when not automatically convertible).
+- First managed deployment converts the legacy layout: original component paths become symlinks into `/opt/irekey/current/<component>/`, so existing systemd units and compose files keep working. This conversion is rehearsed in the lab and on the bench before any field device (`PLT-006` when not automatically convertible).
 - `data_paths` (I10) stay where they are and are never inside `releases/`.
 
 ### 11.2 Privilege (Default; Open for a restricted mode)
 
-Writing to `/opt`, `/etc/systemd/system` and stopping services requires root. v1 uses the SSH account's existing `sudo` (like Ansible's `become`): passwordless sudo, or a sudo password supplied by the vault and sent on stdin (`sudo -S -p ''`), never on the command line and never logged. When stdin also carries data (blob stream, secret values), it uses length-prefixed frames (`4-byte big-endian length + 1-byte frame type + payload`; types: sudo password, secret values, tar stream, end), and the sudo password is the first frame, consumed by a thin `sudo -S` reader before the executor starts (Verify the exact handoff in the lab; document it in an ADR). Only `irekeys-exec` is run under sudo; every other remote command runs unprivileged. `doctor <device>` reports the sudo mode.
+Writing to `/opt`, `/etc/systemd/system` and stopping services requires root. v1 uses the SSH account's existing `sudo` (like Ansible's `become`): passwordless sudo, or a sudo password supplied by the vault and sent on stdin (`sudo -S -p ''`), never on the command line and never logged. When stdin also carries data (blob stream, secret values), it uses length-prefixed frames (`4-byte big-endian length + 1-byte frame type + payload`; types: sudo password, secret values, tar stream, end), and the sudo password is the first frame, consumed by a thin `sudo -S` reader before the executor starts (Verify the exact handoff in the lab; document it in an ADR). Only `irekey-exec` is run under sudo; every other remote command runs unprivileged. `doctor <device>` reports the sudo mode.
 
-Open (Q3): an optional `irekeys bootstrap --restrict-sudo <device>` that installs `/etc/sudoers.d/irekeys` allowing only a fixed, root-owned executor path, validated with `visudo -cf` before install. This is a permanent artifact and needs an ADR before implementation.
+Open (Q3): an optional `irekey bootstrap --restrict-sudo <device>` that installs `/etc/sudoers.d/irekey` allowing only a fixed, root-owned executor path, validated with `visudo -cf` before install. This is a permanent artifact and needs an ADR before implementation.
 
-### 11.3 Executor (`irekeys-exec`)
+### 11.3 Executor (`irekey-exec`)
 
-- Static Go binary. Installation: the laptop streams it gzip-compressed and the remote shell writes it with `gzip -dc` into a temporary directory under the SSH account's home; then `sudo <tmp>/irekeys-exec install-self --sha256 <digest>` re-checks the SHA-256 as root and copies itself to `/opt/irekeys/bin/<digest>/` (root-owned, `0755`); the temporary copy is removed. Afterwards it is executed as `sudo /opt/irekeys/bin/<digest>/irekeys-exec <subcommand>`, and the laptop verifies the installed digest before every use.
+- Static Go binary. Installation: the laptop streams it gzip-compressed and the remote shell writes it with `gzip -dc` into a temporary directory under the SSH account's home; then `sudo <tmp>/irekey-exec install-self --sha256 <digest>` re-checks the SHA-256 as root and copies itself to `/opt/irekey/bin/<digest>/` (root-owned, `0755`); the temporary copy is removed. Afterwards it is executed as `sudo /opt/irekey/bin/<digest>/irekey-exec <subcommand>`, and the laptop verifies the installed digest before every use.
 - Never long-running except during an activation; never listens on a port; never initiates network connections.
 - Subcommands (Default): `install-self`, `capabilities`, `scan`, `receive`, `prepare`, `activate`, `confirm`, `rollback`, `guard`, `recover`, `status`, `collect-logs`, `gc`.
-- `activate` runs **detached** from the SSH session: the laptop runs `sudo irekeys-exec activate --detach --update <update-id>`, which itself starts `systemd-run --unit=irekeys-activate-<update-id> --collect ...` and returns; the laptop then only polls the journal (I6). Verify the exact `systemd-run` flags in `systemd-run(1)`. A transient unit is acceptable here because the guard, not the transient unit, provides reboot safety.
+- `activate` runs **detached** from the SSH session: the laptop runs `sudo irekey-exec activate --detach --update <update-id>`, which itself starts `systemd-run --unit=irekey-activate-<update-id> --collect ...` and returns; the laptop then only polls the journal (I6). Verify the exact `systemd-run` flags in `systemd-run(1)`. A transient unit is acceptable here because the guard, not the transient unit, provides reboot safety.
 - Output to the laptop is newline-delimited JSON on stdout; diagnostics on stderr; all messages carry error codes.
 
 ### 11.4 Activation state machine
@@ -693,7 +695,7 @@ Terminal per-device states (rollout outcome enum): `committed`, `rolled-back`, `
 
 ### 11.5 Journal
 
-`/var/lib/irekeys/journal.jsonl`, one JSON object per line:
+`/var/lib/irekey/journal.jsonl`, one JSON object per line:
 
 ```json
 {"ts":"2026-11-10T18:05:11.123Z","update":"u-01J...","step":"switch","phase":"intent","from":"product@2026.10.0","to":"product@2026.11.0"}
@@ -709,28 +711,28 @@ Terminal per-device states (rollout outcome enum): `committed`, `rolled-back`, `
 Transient systemd units are never written to disk and do not survive a reboot (verified earlier from systemd maintainers' statements; re-Verify in `systemd.unit(5)`/`systemd-run(1)`). Therefore the guard is a **persistent** unit pair written to `/etc/systemd/system/` and enabled at `arm-guard`, and removed at `disarm-guard`:
 
 ```ini
-# irekeys-guard-<update-id>.timer
+# irekey-guard-<update-id>.timer
 [Unit]
-Description=irekeys confirmation guard for <update-id>
+Description=irekey confirmation guard for <update-id>
 
 [Timer]
 OnActiveSec=<max_downtime + soak + confirmation window>
 OnBootSec=60s
 AccuracySec=1s
-Unit=irekeys-guard-<update-id>.service
+Unit=irekey-guard-<update-id>.service
 
 [Install]
 WantedBy=timers.target
 ```
 
 ```ini
-# irekeys-guard-<update-id>.service
+# irekey-guard-<update-id>.service
 [Unit]
-Description=irekeys confirmation guard for <update-id>
+Description=irekey confirmation guard for <update-id>
 
 [Service]
 Type=oneshot
-ExecStart=/opt/irekeys/bin/<digest>/irekeys-exec guard --update <update-id>
+ExecStart=/opt/irekey/bin/<digest>/irekey-exec guard --update <update-id>
 ```
 
 - `OnActiveSec=` is relative to the timer's activation and `OnBootSec=` to boot (both documented in `systemd.timer(5)`). That an enabled timer is re-activated at boot, so the guard runs after a reboot, is an inference: **the lab scenario "reboot during the confirmation window" and a bench test with real power loss are mandatory before 0.1.0** (Section 19.4, scenario S05).
@@ -825,7 +827,7 @@ A bundle is a directory (on the wire: a tar stream) with:
 
 ```
 manifest.json          # see below
-manifest.json.sig      # SSHSIG over manifest.json, namespace irekeys-bundle@v1
+manifest.json.sig      # SSHSIG over manifest.json, namespace irekey-bundle@v1
 blobs/<sha256>         # only blobs the device does not have
 ```
 
@@ -869,7 +871,7 @@ Rules:
 ### 14.1 Layout
 
 ```
-irekeys.yaml                                   # repo_format, defaults, policies, `signers` (public keys allowed to sign bundles)
+irekey.yaml                                    # repo_format, defaults, policies, `signers` (public keys allowed to sign bundles)
 known_hosts                                    # generated from devices/*.yaml; never edited by hand
 components/<component>.yaml                    # repo URL, default branch, build recipe pointer
 profiles/<profile>/profile.yaml                # description, layer files per component
@@ -892,7 +894,7 @@ history/<YYYY>/<id>.json
 ### 14.2 Device file
 
 ```yaml
-schema: irekeys/device/v1
+schema: irekey/device/v1
 id: acme-north-01
 customer: acme
 site: north
@@ -911,13 +913,13 @@ components:
   backend-api:   { runtime: compose, path: /opt/backend-api, project: backend-api }
   frontend:      { runtime: systemd, path: /opt/frontend, unit: frontend.service }
 credentials: { ref: "secret://bitwarden/acme-north-01" }   # reference only
-adopted: { at: "2026-11-01T12:00:00Z", by: "dev@example.com", tool: "irekeys 0.1.0" }
+adopted: { at: "2026-11-01T12:00:00Z", by: "dev@example.com", tool: "irekey 0.1.0" }
 ```
 
-### 14.3 Component manifest (in each component repository: `.irekeys/component.yaml`)
+### 14.3 Component manifest (in each component repository: `.irekey/component.yaml`)
 
 ```yaml
-schema: irekeys/component/v1
+schema: irekey/component/v1
 name: backend-api
 build:
   kind: container               # container | files
@@ -928,8 +930,8 @@ paths:
   exclude: [logs/, tmp/, "**/__pycache__/"]
   data: [/var/opt/backend-api/]  # data_paths (I10)
 config:
-  schema: .irekeys/config.schema.json
-  defaults: .irekeys/config.defaults.yaml
+  schema: .irekey/config.schema.json
+  defaults: .irekey/config.defaults.yaml
   outputs:
     - { path: config/settings.yaml, format: yaml }
     - { path: .env, format: env, mode: "0600" }
@@ -942,8 +944,8 @@ hooks: { migrate: { command: [bin/migrate], reversible: false } }
 
 ### 14.4 Versioning and migration (Default)
 
-- Every file carries `schema: irekeys/<kind>/v<N>`. The repository root `irekeys.yaml` carries `repo_format: <N>`.
-- A newer irekeys reads older formats and offers `irekeys repo migrate` (one commit, reviewable). An older irekeys refuses newer formats (`REPO-002`) with the version needed.
+- Every file carries `schema: irekey/<kind>/v<N>`. The repository root `irekey.yaml` carries `repo_format: <N>`.
+- A newer irekey reads older formats and offers `irekey repo migrate` (one commit, reviewable). An older irekey refuses newer formats (`REPO-002`) with the version needed.
 - `docs/schema-versions.txt` lists every schema and version and is kept current by a test.
 
 ---
@@ -965,31 +967,31 @@ hooks: { migrate: { command: [bin/migrate], reversible: false } }
 
 | Command | Purpose |
 |---|---|
-| `irekeys init [--repo PATH\|URL]` | create/clone the deployment repository, set up the vault |
-| `irekeys doctor [<device>]` | check the operator machine, or a device's readiness |
-| `irekeys adopt <address> --customer C --site S [--name N] [--user U] [--port P] [--jump SPEC]` / `--csv FILE` | adopt devices |
-| `irekeys reidentify <device>` | replace a device identity after hardware change (confirmation + reason) |
-| `irekeys status [<device>\|--group G\|--rollout R] [--debt]` | version matrix, drift, last results |
-| `irekeys snapshot <device>\|--group G` | read-only snapshot |
-| `irekeys diff <device> [<component>]` | show drift |
-| `irekeys extract <device>\|--all [--upstream]` | nearest base, hunks, clusters, suggestions |
-| `irekeys triage <device>\|--cluster ID` | record decisions, generate layers/patches |
-| `irekeys edit <component> --customer C [--site S\|--device D\|--profile P]` | open a workspace |
-| `irekeys save` | regenerate patches, commit, open a merge request |
-| `irekeys rebase <component> --to <tag>` | move every stack to a new base |
-| `irekeys graph check\|impact <ref>\|why <device> <component> <key>` | graph queries |
-| `irekeys release new <name> [--from <version>]` | create the next release-set version |
-| `irekeys verify <release-set> [--group G]` | run gates V1–V3 locally |
-| `irekeys ci` | run V1–V4 inside the deployment repository's CI |
-| `irekeys plan <release-set> (--device D\|--group G\|--rollout R)` | the plan, with bytes to transfer |
-| `irekeys transfer` / `activate` / `deploy` / `rollback <device>` | delivery |
-| `irekeys rollout new\|run\|status\|pause\|resume\|revert` | fleet rollouts |
-| `irekeys pending list\|run` | pending queue |
-| `irekeys vault init\|unlock\|lock\|migrate\|status` | vault management |
-| `irekeys ui [--port N]` | local read-only web UI |
-| `irekeys lab up\|down\|status\|scenario <name>` | simulated fleet |
-| `irekeys repo migrate` | migrate deployment repository formats |
-| `irekeys version` | version, commit, supported formats, providers, embedded executor digests |
+| `irekey init [--repo PATH\|URL]` | create/clone the deployment repository, set up the vault |
+| `irekey doctor [<device>]` | check the operator machine, or a device's readiness |
+| `irekey adopt <address> --customer C --site S [--name N] [--user U] [--port P] [--jump SPEC]` / `--csv FILE` | adopt devices |
+| `irekey reidentify <device>` | replace a device identity after hardware change (confirmation + reason) |
+| `irekey status [<device>\|--group G\|--rollout R] [--debt]` | version matrix, drift, last results |
+| `irekey snapshot <device>\|--group G` | read-only snapshot |
+| `irekey diff <device> [<component>]` | show drift |
+| `irekey extract <device>\|--all [--upstream]` | nearest base, hunks, clusters, suggestions |
+| `irekey triage <device>\|--cluster ID` | record decisions, generate layers/patches |
+| `irekey edit <component> --customer C [--site S\|--device D\|--profile P]` | open a workspace |
+| `irekey save` | regenerate patches, commit, open a merge request |
+| `irekey rebase <component> --to <tag>` | move every stack to a new base |
+| `irekey graph check\|impact <ref>\|why <device> <component> <key>` | graph queries |
+| `irekey release new <name> [--from <version>]` | create the next release-set version |
+| `irekey verify <release-set> [--group G]` | run gates V1–V3 locally |
+| `irekey ci` | run V1–V4 inside the deployment repository's CI |
+| `irekey plan <release-set> (--device D\|--group G\|--rollout R)` | the plan, with bytes to transfer |
+| `irekey transfer` / `activate` / `deploy` / `rollback <device>` | delivery |
+| `irekey rollout new\|run\|status\|pause\|resume\|revert` | fleet rollouts |
+| `irekey pending list\|run` | pending queue |
+| `irekey vault init\|unlock\|lock\|migrate\|status` | vault management |
+| `irekey ui [--port N]` | local read-only web UI |
+| `irekey lab up\|down\|status\|scenario <name>` | simulated fleet |
+| `irekey repo migrate` | migrate deployment repository formats |
+| `irekey version` | version, commit, supported formats, providers, embedded executor digests |
 
 ### 15.3 Exit codes (contract from 1.0)
 
@@ -1027,7 +1029,7 @@ One line per device, updated in place on a TTY: `queued`, `preflight`, `transfer
 2. **Classify where the error is detected**, from structured signals (exit statuses, `errno`, systemd unit properties, SQLSTATE, HTTP status), never from localized text. Remote commands run with `LC_ALL=C`.
 3. Every error states the **device state**: `unchanged`, `previous-release`, `new-release`, `unknown`, `needs-intervention`.
 4. **Fail safe on the unknown:** an unclassified error aborts before the switch and rolls back after it (`BUG-003`).
-5. **Unknown is not success:** if the state cannot be proven, report `unknown` and block further changes to that device until `irekeys status <device>` reconciles it.
+5. **Unknown is not success:** if the state cannot be proven, report `unknown` and block further changes to that device until `irekey status <device>` reconciles it.
 6. **Retry only what is transient and idempotent:** connection setup, blob upload, read-only commands; exponential backoff with jitter, max 3 attempts (Default). Never retry a step after its `intent` without consulting the journal.
 7. Every code has: condition, identification signal, handling, exit code, resulting device state, and at least one test that produces it.
 8. **Phase-dependent codes.** A few codes can occur before or after SWITCH (marked "by phase" in Appendix B). Their exit code is set by the phase: 6 before SWITCH (device `unchanged`), 7 after SWITCH with a successful rollback (`previous-release`), 8 when the rollback fails (`needs-intervention`).
@@ -1066,7 +1068,7 @@ Seed the registry with the codes needed by the implemented paths in each milesto
 
 ### 17.1 Assets
 
-Customer devices and the processes they control; the path back to each device (network, sshd, credentials); device credentials for 200+ sites; the integrity of what reaches devices; the deployment repository (customer data); the integrity of the irekeys release binaries.
+Customer devices and the processes they control; the path back to each device (network, sshd, credentials); device credentials for 200+ sites; the integrity of what reaches devices; the deployment repository (customer data); the integrity of the irekey release binaries.
 
 ### 17.2 Threat model (write `docs/threat-model.md` in M0; update with every security-relevant change)
 
@@ -1077,19 +1079,19 @@ Customer devices and the processes they control; the path back to each device (n
 | Careless or malicious insider | unreviewed changes; direct edits on devices over SSH |
 | Tampered bundle | in transit or in the laptop cache |
 | Malicious or broken device | returns hostile output to the laptop (huge output, escape sequences, malformed JSON) |
-| Compromised dependency or CI | modified irekeys release |
+| Compromised dependency or CI | modified irekey release |
 | Physical access to a device | out of scope beyond detecting drift |
 
 ### 17.3 Controls (Default)
 
 - **Identity:** host-key pinning per device; MAC check; device-bound bundles; duplicate-identity detection at adoption; human confirmation on first use.
 - **Credentials:** personal SSH keys in an agent or hardware token preferred; vault for passwords and keys otherwise; vault locked after use; secrets only in memory; redaction everywhere.
-- **Least privilege:** only `irekeys-exec` runs under sudo; restricted-sudo mode is Open (Q3).
+- **Least privilege:** only `irekey-exec` runs under sudo; restricted-sudo mode is Open (Q3).
 - **Signing:** bundles signed with SSHSIG by the developer's key; devices trust only keys in `trusted-signers`, written by the first transfer from the `signers` list of the deployment repository at an approved commit (I20), and changed afterwards only by a bundle signed by a currently trusted key (key rotation). Residual risk: a laptop compromised *before the first transfer* to a device can plant its own key on that device; documented in the assurance case.
 - **Approval:** I20 — field devices receive only state from the protected branch of the deployment repository; the forge enforces merge-request approval; `doctor` warns when branch protection cannot be confirmed through the forge API.
 - **Hostile device output:** every read from a device is size-bounded and parsed strictly; terminal output is sanitized (no control characters except `\n` and `\t`).
 - **UI:** binds only to `127.0.0.1`/`::1`, random port by default, random per-session token in the URL, strict Content-Security-Policy, no external assets, no state-changing endpoints in v1.
-- **Supply chain of irekeys itself:** Section 21.6 (pinned actions, provenance, SBOM, reproducible builds, signed tags).
+- **Supply chain of irekey itself:** Section 21.6 (pinned actions, provenance, SBOM, reproducible builds, signed tags).
 - **No telemetry** (NFR-10).
 - **Reference:** IEC TR 62443-2-3 (patch management in industrial automation and control systems) informs the approval and history flow; cite it only as a reference, without claiming compliance.
 
@@ -1100,18 +1102,18 @@ Customer devices and the processes they control; the path back to each device (n
 
 ---
 
-## 18. Web UI (`irekeys ui`)
+## 18. Web UI (`irekey ui`)
 
 ### 18.1 Principles (Default)
 
 - **Read-only in v1** (Decided by scope: deploy actions from the UI come later).
 - **No logic of its own:** handlers call `internal/app`, the same service layer as the CLI. JSON returned by the UI's API uses the same types as `--json`.
 - Embedded in the binary with `embed`; server-rendered `html/template` + htmx (vendored file with its license, pinned version, Subresource Integrity not needed when served locally but keep the file digest in a test). No Node toolchain, no bundler, no CDN.
-- Organization inspired by Spotify's layout (Decided), with irekeys' **own visual identity**: no Spotify colors, logo, typography or assets.
+- Organization inspired by Spotify's layout (Decided), with irekey's **own visual identity**: no Spotify colors, logo, typography or assets.
 
 ### 18.2 Information architecture
 
-| Spotify concept | irekeys view |
+| Spotify concept | irekey view |
 |---|---|
 | left sidebar: Home, Search, Library | **Home**, **Search**, **Fleet** (customers → sites → devices) |
 | "Now playing" bar, fixed at the bottom | **Rollout in progress** bar, visible on every page: release set, wave, progress, failures |
@@ -1132,7 +1134,7 @@ Also: **Diff viewer** (drift and patch stacks, side by side), **Graph pages** as
 
 ---
 
-## 19. Lab (`irekeys lab up`)
+## 19. Lab (`irekey lab up`)
 
 ### 19.1 Purpose
 
@@ -1147,19 +1149,19 @@ Simulate the whole workflow with containers only, in CI and on a laptop, so ever
 | git server | Gitea (default, light) | GitLab CE as an optional profile (`--profile gitlab`): it needs several GB of RAM |
 | vault | Vaultwarden | compatible with Bitwarden clients |
 | field instruments | Modbus TCP simulator (pymodbus) | data source for freshness checks |
-| telecontrol | IEC 60870-5-104 simulator (Python `c104`, built on lib60870-C, **GPL-3.0**) | separate container and process only; never linked or embedded in irekeys |
-| operator laptops | two `irekeys` containers | concurrency between two developers |
+| telecontrol | IEC 60870-5-104 simulator (Python `c104`, built on lib60870-C, **GPL-3.0**) | separate container and process only; never linked or embedded in irekey |
+| operator laptops | two `irekey` containers | concurrency between two developers |
 | bad networks | Toxiproxy and/or `tc netem` | latency, loss, bandwidth, cuts |
 
 ### 19.3 Distribution
 
-- Lab image sources live in `lab/images/`. A workflow (`lab-images.yml`) builds them multi-arch, publishes to `ghcr.io/hitoshyamamoto/irekeys-lab-*`, and attests provenance.
-- The `irekeys` binary embeds only the compose file and scenario definitions, referencing images **by digest** pinned at release time. `irekeys lab up` requires Docker (or Podman, Verify compatibility) on the operator machine.
-- The IEC 104 simulator image carries its own license notice; the README states that the lab is optional and separate from the irekeys binary.
+- Lab image sources live in `lab/images/`. A workflow (`lab-images.yml`) builds them multi-arch, publishes to `ghcr.io/hitoshyamamoto/irekey-lab-*`, and attests provenance.
+- The `irekey` binary embeds only the compose file and scenario definitions, referencing images **by digest** pinned at release time. `irekey lab up` requires Docker (or Podman, Verify compatibility) on the operator machine.
+- The IEC 104 simulator image carries its own license notice; the README states that the lab is optional and separate from the irekey binary.
 
 ### 19.4 Fixtures and scenarios
 
-- **Five fictional components** (Decided), small (a few hundred lines each) with real dependencies between them: `backend-api` (HTTP service), `backend-ingest` (reads the Modbus simulator, writes samples, freshness check), `frontend` (static site served by a small server), `analytics` (batch job under a systemd timer), `infra` (compose files and unit templates). Each has `.irekeys/component.yaml`, a config schema, defaults, health checks and several tagged versions, including one deliberately broken version (fails health) and one with an irreversible migration.
+- **Five fictional components** (Decided), small (a few hundred lines each) with real dependencies between them: `backend-api` (HTTP service), `backend-ingest` (reads the Modbus simulator, writes samples, freshness check), `frontend` (static site served by a small server), `analytics` (batch job under a systemd timer), `infra` (compose files and unit templates). Each has `.irekey/component.yaml`, a config schema, defaults, health checks and several tagged versions, including one deliberately broken version (fails health) and one with an irreversible migration.
 - **Divergence generator** (`lab/divergence`): seeds realistic drift — changed values in config files, the same change repeated across a group (to test clustering), unique changes, missing `.git` on some devices, stray files, permission changes. Deterministic given a seed.
 - **Scenarios** (each is an automated test; ⚠ marks those mandatory before 0.1.0):
 
@@ -1197,7 +1199,7 @@ Simulate the whole workflow with containers only, in CI and on a laptop, so ever
 | Compatibility zoo | `testdata/compat/<version>/` | bundles, journals and repository files from every released version must be read by the current code |
 | Architecture tests | `go list -deps` assertions | dependency rule (Section 8.4), executor size limit |
 
-Rules: tests never need hardware or internet (except the lab image pull in e2e); bug fixes come with a regression test; invariant tests are named `TestInvariant_I<N>_*`; race detector always on in CI; coverage floor 80 % total (CI-enforced, same awk check as the maintainer's other Go projects).
+Rules: tests never need hardware or internet (except the lab image pull in e2e); bug fixes come with a regression test; invariant tests are named after the invariant, `Test<Name>_*` (Section 7); race detector always on in CI; coverage floor 80 % total (CI-enforced, same awk check as the maintainer's other Go projects).
 
 ---
 
@@ -1218,9 +1220,9 @@ This section mirrors the maintainer's existing projects (`modtop` for Go, `soapb
 
 | File | Content (follow the maintainer's existing style) |
 |---|---|
-| `README.md` | badges (CI, release, Go version, license, OpenSSF Best Practices, OpenSSF Scorecard); one-line description; railway introduction (the only place for the metaphor); 60-second quick start (`curl` download, `sha256sum --check`, `irekeys init`, `irekeys adopt`); `irekeys lab up` demo; installation; provenance verification (`gh attestation verify`); what it is not; documentation links |
+| `README.md` | badges (CI, release, Go version, license, OpenSSF Best Practices, OpenSSF Scorecard); one-line description; railway introduction (the only place for the metaphor); 60-second quick start (`curl` download, `sha256sum --check`, `irekey init`, `irekey adopt`); `irekey lab up` demo; installation; provenance verification (`gh attestation verify`); what it is not; documentation links |
 | `CONTRIBUTING.md` | dev setup, the exact CI commands, golden-file update, coding style, DCO, rules (tests required, English only, dependency justification, Conventional Commits, SHA-pinned actions, changelog), releasing steps, reproducing a release, security pointer |
-| `GOVERNANCE.md` | **the verb**: irekeys exists to *inspect, adjust and deliver* software to offline devices with per-customer differences; feature acceptance criteria (0 demand with a real field case; 1 verb test, veto; 2 zero-configuration default, negotiable; 3 maintainable by one person, negotiable; 4 contracts, veto; 5 operational safety, veto unless mitigated: anything new on devices must be optional, explicit, confirmed and logged); contract inventory; deprecation policy; "one theme per version"; proposal template; decision making; roles table; continuity (bus factor 1, mitigations) |
+| `GOVERNANCE.md` | **the verb**: irekey exists to *inspect, adjust and deliver* software to offline devices with per-customer differences; feature acceptance criteria (0 demand with a real field case; 1 verb test, veto; 2 zero-configuration default, negotiable; 3 maintainable by one person, negotiable; 4 contracts, veto; 5 operational safety, veto unless mitigated: anything new on devices must be optional, explicit, confirmed and logged); contract inventory; deprecation policy; "one theme per version"; proposal template; decision making; roles table; continuity (bus factor 1, mitigations) |
 | `SECURITY.md` | Section 17.4 |
 | `CODE_OF_CONDUCT.md` | Contributor Covenant 2.1 (copy from the maintainer's other projects) |
 | `ROADMAP.md` | Now / Next / Later / Not planned, 12-month horizon, intent not promises |
@@ -1251,7 +1253,7 @@ This section mirrors the maintainer's existing projects (`modtop` for Go, `soapb
 | `check-shell.sh` | remote commands are assembled with `fmt.Sprintf`/`+` into a shell string outside `internal/transport/ssh/quote.go` |
 | `check-realdata.sh` | an IPv4/IPv6 address outside the documentation and loopback ranges, a globally administered MAC address, or a domain other than `example.*` and an allowlist of tool, module and hosting domains (`github.com`, `golang.org`, `go.dev`, `ghcr.io`, ...) appears in `examples/`, `testdata/`, `lab/` or docs |
 | `check-language.sh` | non-ASCII letters appear outside an allowlist (`docs/spec/masterprompt.md` and `README.md` for the Japanese terms of Section 1.2, test fixtures for UTF-8 handling) |
-| `check-exec-deps.sh` | `cmd/irekeys-exec` depends on an operator-side package, or the executor exceeds the size limit |
+| `check-exec-deps.sh` | `cmd/irekey-exec` depends on an operator-side package, or the executor exceeds the size limit |
 | `check-spdx.sh` | a `.go` file lacks `// SPDX-License-Identifier: MIT` |
 | `check-errors.sh` | an error code is used but not registered, or registered but undocumented/untested |
 
@@ -1261,7 +1263,7 @@ Global rules (copy from `modtop`/`soapbar`): `permissions: contents: read` at th
 
 | Workflow | Trigger | Jobs |
 |---|---|---|
-| `ci.yml` | push to main, PR | **lint** (golangci-lint, guard scripts, `actionlint`), **test** (`go vet`, `go test -race -coverpkg=./... -coverprofile`, coverage floor 80 %, short fuzz 30 s per target, `govulncheck` pinned), **dco** (Signed-off-by on every PR commit), **build** (cross-compile executors then CLI for all targets, `-trimpath -ldflags "-s -w -X ...version=ci"`, executor size check, clean-machine smoke test: `irekeys version`, `irekeys doctor` with `HOME` in a temp dir), **integration** (sshd/systemd containers), **e2e-smoke** (lab scenarios S01-small, S04, S05, S06 on PRs touching device-side code; full set nightly), **licenses** (`go-licenses` check) |
+| `ci.yml` | push to main, PR | **lint** (golangci-lint, guard scripts, `actionlint`), **test** (`go vet`, `go test -race -coverpkg=./... -coverprofile`, coverage floor 80 %, short fuzz 30 s per target, `govulncheck` pinned), **dco** (Signed-off-by on every PR commit), **build** (cross-compile executors then CLI for all targets, `-trimpath -ldflags "-s -w -X ...version=ci"`, executor size check, clean-machine smoke test: `irekey version`, `irekey doctor` with `HOME` in a temp dir), **integration** (sshd/systemd containers), **e2e-smoke** (lab scenarios S01-small, S04, S05, S06 on PRs touching device-side code; full set nightly), **licenses** (`go-licenses` check) |
 | `codeql.yml` | push, PR, weekly | `github/codeql-action` init/analyze, `languages: go`, `build-mode: autobuild` or manual (Verify for Go), `queries: security-extended` |
 | `scorecard.yml` | push to main, weekly, branch protection changes | `ossf/scorecard-action` with `publish_results: true`, SARIF upload |
 | `fuzz.yml` | weekly, manual | long fuzzing (5 min per target), crash artifacts uploaded on failure |
@@ -1275,15 +1277,15 @@ Dependabot (`.github/dependabot.yml`): `gomod`, `github-actions` and `docker` (f
 ### 21.6 Release process (Decided pattern from `modtop`: curated changelog + signed tags)
 
 1. In `CHANGELOG.md`, rename `[Unreleased]` to `## [X.Y.Z] - YYYY-MM-DD`; merge.
-2. `git tag -s vX.Y.Z -m "irekeys X.Y.Z" && git push origin vX.Y.Z`.
+2. `git tag -s vX.Y.Z -m "irekey X.Y.Z" && git push origin vX.Y.Z`.
 3. `release.yml`:
    - runs the test suite;
    - extracts the changelog section into `$RUNNER_TEMP/notes.md` (outside the working tree, so the build is clean and reproducible);
-   - builds `irekeys-exec` for `linux/{amd64,arm64,arm/v7}`, records their digests, embeds them, then builds `irekeys` for `linux/{amd64,arm64}`, `darwin/{amd64,arm64}`, `windows/{amd64,arm64}` with `CGO_ENABLED=0 -trimpath -ldflags "-s -w -X github.com/hitoshyamamoto/irekeys/internal/version.Version=${TAG}"`;
+   - builds `irekey-exec` for `linux/{amd64,arm64,arm/v7}`, records their digests, embeds them, then builds `irekey` for `linux/{amd64,arm64}`, `darwin/{amd64,arm64}`, `windows/{amd64,arm64}` with `CGO_ENABLED=0 -trimpath -ldflags "-s -w -X github.com/hitoshyamamoto/irekey/internal/version.Version=${TAG}"`;
    - writes `SHA256SUMS`;
    - generates a CycloneDX SBOM with `cyclonedx-gomod` (Verify module path and flags) per binary;
    - attests build provenance with `actions/attest-build-provenance` for binaries and SBOMs;
-   - publishes with `gh release create --verify-tag --notes-file`, attaching binaries, `SHA256SUMS`, SBOMs, `THIRD_PARTY_NOTICES` and the provenance bundle renamed `irekeys-X.Y.Z-provenance.sigstore.json` (the suffix the Scorecard Signed-Releases check recognizes).
+   - publishes with `gh release create --verify-tag --notes-file`, attaching binaries, `SHA256SUMS`, SBOMs, `THIRD_PARTY_NOTICES` and the provenance bundle renamed `irekey-X.Y.Z-provenance.sigstore.json` (the suffix the Scorecard Signed-Releases check recognizes).
 4. Reproducibility instructions in `CONTRIBUTING.md`, verified by a CI job that rebuilds a released tag and compares checksums (nightly).
 5. Pre-1.0 versions: `0.MINOR.PATCH`; `0.x` may break contracts, with a changelog entry under "Changed" or "Removed".
 
@@ -1297,7 +1299,7 @@ Not chosen: release-please (it creates tags with a bot identity, which conflicts
 
 ### 21.8 License compliance
 
-- MIT for irekeys code. Allowed dependency licenses (Default): MIT, BSD-2-Clause, BSD-3-Clause, Apache-2.0, ISC, MPL-2.0 (file-level copyleft; requires an ADR note when added). Anything else requires an ADR.
+- MIT for irekey code. Allowed dependency licenses (Default): MIT, BSD-2-Clause, BSD-3-Clause, Apache-2.0, ISC, MPL-2.0 (file-level copyleft; requires an ADR note when added). Anything else requires an ADR.
 - CI: `go install github.com/google/go-licenses/v2@<pinned>` then `go-licenses check ./... --allowed_licenses=...` (Verify flag names in the pinned version), and `go-licenses report` to generate `THIRD_PARTY_NOTICES` at release.
 - GPL software (the IEC 104 simulator) exists only inside a lab container image and is never a Go dependency (a guard checks `go.mod`).
 
@@ -1330,7 +1332,7 @@ Each milestone ends with: green CI, updated `CHANGELOG.md`, updated docs, ADRs f
 
 ### M0 — Repository foundation
 
-Scope: module, directory skeleton (Section 8.3), `CLAUDE.md`, all community and governance files (Section 21.2), ADRs 0001–0019 (Section 24) as "Accepted" or "Proposed" per their labels, `.golangci.yml`, guard scripts, every workflow of Section 21.5 (e2e jobs as placeholders that pass with a skip message), Dependabot, `internal/errs` registry and generator, `internal/version`, `internal/redact`, `irekeys version`, `irekeys doctor` (local checks only), `docs/glossary.md` generated from Appendix A with a sync test.
+Scope: module, directory skeleton (Section 8.3), `CLAUDE.md`, all community and governance files (Section 21.2), ADRs 0001–0019 (Section 24) as "Accepted" or "Proposed" per their labels, `.golangci.yml`, guard scripts, every workflow of Section 21.5 (e2e jobs as placeholders that pass with a skip message), Dependabot, `internal/errs` registry and generator, `internal/version`, `internal/redact`, `irekey version`, `irekey doctor` (local checks only), `docs/glossary.md` generated from Appendix A with a sync test.
 
 Acceptance:
 - `go vet`, `go test -race`, lint and all guards pass; coverage floor enforced.
@@ -1339,15 +1341,15 @@ Acceptance:
 
 ### M1 — Lab foundation
 
-Scope: `lab/images/*`, the five fictional components with tags, the divergence generator, `irekeys lab up|down|status|scenario`, Gitea + Vaultwarden + simulators, netem/Toxiproxy wiring, `lab-images.yml`.
+Scope: `lab/images/*`, the five fictional components with tags, the divergence generator, `irekey lab up|down|status|scenario`, Gitea + Vaultwarden + simulators, netem/Toxiproxy wiring, `lab-images.yml`.
 
-Acceptance: `irekeys lab up --devices 20` on a clean Linux machine with Docker reaches "ready" in under 5 minutes (Default target); every device accepts SSH; divergence is reproducible by seed; images are published with provenance.
+Acceptance: `irekey lab up --devices 20` on a clean Linux machine with Docker reaches "ready" in under 5 minutes (Default target); every device accepts SSH; divergence is reproducible by seed; images are published with provenance.
 
 ### M2 — Census (read-only)
 
 Scope: `init` (deployment repository + local vault + Bitwarden provider), transport/ssh with pinning and MAC check, facts, component discovery, snapshot, `adopt` (single and CSV), `status`, `diff`, drift, local state, `known_hosts` generation, deployment-repository loader with schemas v1 for device/customer/site/component, `repo migrate` skeleton.
 
-Acceptance: S01 passes (first adoption ≤ 60 s including `init`, each further adoption ≤ 60 s, with netem 100 ms/1 %); S12 passes; no state-changing remote command exists yet (a test asserts the M2 remote command allowlist: read-only commands plus the temporary unprivileged `irekeys-exec scan` of FR-04).
+Acceptance: S01 passes (first adoption ≤ 60 s including `init`, each further adoption ≤ 60 s, with netem 100 ms/1 %); S12 passes; no state-changing remote command exists yet (a test asserts the M2 remote command allowlist: read-only commands plus the temporary unprivileged `irekey-exec scan` of FR-04).
 
 ### M3 — Customization model, extraction and triage
 
@@ -1357,9 +1359,9 @@ Acceptance: S02 and S15 pass; property tests for merge semantics; golden tests f
 
 ### M4 — Edit, save, rebase, verify, CI gates
 
-Scope: workspaces, `edit`, `save`, `rebase` with classification, forge providers (`none`, `gitlab`, `github`), `verify` (V1–V3), `irekeys ci` (V1–V4 against the lab), deployment-repository CI templates, I20 enforcement.
+Scope: workspaces, `edit`, `save`, `rebase` with classification, forge providers (`none`, `gitlab`, `github`), `verify` (V1–V3), `irekey ci` (V1–V4 against the lab), deployment-repository CI templates, I20 enforcement.
 
-Acceptance: S14 passes; a merge request in the lab's optional GitLab profile is opened by `save` with a correct summary; `irekeys ci` runs in the example deployment repository's GitHub Actions template.
+Acceptance: S14 passes; a merge request in the lab's optional GitLab profile is opened by `save` with a correct summary; `irekey ci` runs in the example deployment repository's GitHub Actions template.
 
 ### M5 — Safe single-device delivery
 
@@ -1410,6 +1412,8 @@ Acceptance: all ⚠ scenarios pass; zero open `BUG-*` issues; release `v0.1.0` p
 | 0017 | Containerized lab; GPL simulators isolated in images | Proposed |
 | 0018 | Release process: curated changelog and maintainer-signed tags | Accepted |
 | 0019 | Stable error-code registry | Proposed |
+| 0020 | Project name irekey | Accepted (maintainer decision; renames the project throughout and amends Section 1.2) |
+| 0021 | Descriptive invariant names outside the specification | Accepted (maintainer decision; amends Sections 7 and 20) |
 
 ---
 
@@ -1429,7 +1433,7 @@ Acceptance: all ⚠ scenarios pass; zero open `BUG-*` issues; release `v0.1.0` p
 |---|---|---|
 | Q1 | Can a laptop reach several sites at once (VPN concentrator), or one customer VPN at a time? | default concurrency, rollout UX |
 | Q2 | Must all drift be triaged before any update (current default, I3), or may updates go first with site adjustments later? | I3 policy |
-| Q3 | Restricted sudo bootstrap (`/etc/sudoers.d/irekeys`)? It is a permanent artifact | privilege model, G4 |
+| Q3 | Restricted sudo bootstrap (`/etc/sudoers.d/irekey`)? It is a permanent artifact | privilege model, G4 |
 | Q4 | CLI message localization beyond English | `internal/cli` |
 | Q5 | Is a hardware watchdog available on the reference device model? | recovery from hangs |
 | Q6 | Distribution of OS versions across devices and end-of-support policy | `requires`, test matrix |
@@ -1456,14 +1460,14 @@ Terms are alphabetical. "Not:" lists confusions to avoid.
 - **change set** — patches in several components sharing a `Change-Id:`, handled as a unit.
 - **channel** — a release stream (`stable` only in v1).
 - **component** — a git repository whose software runs on devices. Not: service (a component may run several services).
-- **component manifest** — `.irekeys/component.yaml` in a component repository.
+- **component manifest** — `.irekey/component.yaml` in a component repository.
 - **confirmation** — the operator's new SSH connection telling the device to keep an activation. Not: approval.
 - **customer** — the organization owning sites. Not: user.
 - **deployment repository** — the private git repository with customers, sites, devices, layers, patches, release sets, groups, rollouts, triage records, snapshots and history. Not: component repository; never called "fleet repository".
 - **desired digest** — digest of a device's desired state (release set + variants + rendered config digests).
 - **device** — one embedded computer at a site, identified by its pinned host key and MAC addresses.
 - **drift** — difference between expected and observed device state.
-- **executor** — `irekeys-exec`, the uploaded device-side binary. Not: agent or daemon.
+- **executor** — `irekey-exec`, the uploaded device-side binary. Not: agent or daemon.
 - **extraction** — finding the nearest base and the delta of a device's component, split into hunks.
 - **failure budget** — maximum failed devices in a wave before it halts.
 - **forge** — a git hosting service with merge requests (GitLab, GitHub).
@@ -1484,7 +1488,7 @@ Terms are alphabetical. "Not:" lists confusions to avoid.
 - **point of no return** — the SWITCH step; after it, failures roll back.
 - **profile** — a shared layer and optional patch stack for devices with a common trait.
 - **provider** — an implementation of an extension point (vault, forge, transport). Not: backend.
-- **release set** — a tested combination of component bases delivered and rolled back together. Not: release (of irekeys itself).
+- **release set** — a tested combination of component bases delivered and rolled back together. Not: release (of irekey itself).
 - **rendered configuration** — the merged layers for one device and component, written into the component's declared files.
 - **rollout** — delivery of a release set through ordered waves.
 - **site** — a physical location of a customer.
@@ -1514,7 +1518,7 @@ Seed `internal/errs/codes.yaml` with at least these (condition → exit code →
 | LOC-002 | operator machine disk full | 13 | unchanged |
 | LOC-003 | vault locked or unavailable | 13 | unchanged |
 | REPO-001 | file fails its JSON Schema | 4 | unchanged |
-| REPO-002 | schema newer than this irekeys | 13 | unchanged |
+| REPO-002 | schema newer than this irekey | 13 | unchanged |
 | REPO-003 | uncommitted changes in the deployment repository | 5 | unchanged |
 | REPO-004 | release set modified after use | 4 | unchanged |
 | REPO-005 | commit not reachable from the remote protected branch (I20) | 5 | unchanged |
@@ -1577,7 +1581,7 @@ Seed `internal/errs/codes.yaml` with at least these (condition → exit code →
 | RO-002 | failure budget exceeded | 10 | per device |
 | RO-003 | invalid rollout plan | 4 | unchanged |
 | TIME-001 | device clock skew beyond tolerance (warning; blocks only time-dependent checks) | — | — |
-| BUG-001 | panic in irekeys | 15 | unknown |
+| BUG-001 | panic in irekey | 15 | unknown |
 | BUG-002 | invariant violated | 15 | unknown |
 | BUG-003 | unclassified error (fail safe) | by phase | by phase |
 
