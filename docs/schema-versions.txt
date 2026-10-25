@@ -1,0 +1,16 @@
+# Schema identifiers this build of irekey reads.
+#
+# Every deployment repository file, and every file irekey reads from a
+# component repository (such as the component manifest), names its schema
+# in a "schema:" field with an identifier of the form irekey/<kind>/v<N>.
+# This file lists every such identifier this build reads, one per line,
+# sorted. Lines starting with "#" and blank lines are comments.
+#
+# Bundle, journal and repository format numbers are not schema identifiers
+# and are not listed here; they are recorded elsewhere when they exist.
+#
+# The file is kept current by a test: go test ./internal/schema fails when
+# the list differs from the code, and go test ./internal/schema -update
+# rewrites the list, keeping this header.
+#
+# No schema is defined yet, so the list is empty.

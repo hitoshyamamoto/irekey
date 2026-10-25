@@ -1,0 +1,48 @@
+name: Scorecard
+
+on:
+  branch_protection_rule:
+  schedule:
+    - cron: "30 2 * * 1"
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# publish_results: true makes the OpenSSF API verify this workflow before it
+# accepts the results: no top-level env or defaults, no workflow-level write
+# permission, id-token: write only on the Scorecard job, and that job may
+# have no env, defaults, container or services and may only use checkout,
+# upload-artifact, upload-sarif, harden-runner and the Scorecard action
+# itself (scorecard-action README at v2.5.0). Keep it that way when editing this file.
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  analysis:
+    name: Scorecard analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read # check out the repository
+      security-events: write # upload SARIF results to code scanning
+      id-token: write # publish results to the OpenSSF REST API
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Run analysis
+        uses: ossf/scorecard-action@fa7117db83c52d787ae5a89f350999701505d78e # v2.5.0
+        with:
+          results_file: results.sarif
+          results_format: sarif
+          publish_results: true
+
+      - name: Upload SARIF results
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        with:
+          sarif_file: results.sarif

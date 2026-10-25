@@ -1,0 +1,81 @@
+name: Dependabot auto-merge
+
+# Arms squash auto-merge on every Dependabot pull request, so a bump lands as
+# soon as the ruleset's required checks (lint, test, build, dco, codeql,
+# licenses, guards) pass instead of waiting for a human to click. Nothing is
+# merged early: auto-merge is GitHub's own gate and the branch ruleset
+# (required checks, up-to-date branch, no bypass actors) still applies in
+# full.
+#
+# Why this exists: with up-to-date checks required, every merge to main puts
+# the remaining Dependabot pull requests behind; Dependabot rebases them, but
+# if nobody merges promptly the next weekly run supersedes them. Arming
+# auto-merge turns the backlog into a chain that drains itself.
+#
+# The workflow is optional and a no-op until the AUTOMERGE_APP_CLIENT_ID
+# repository variable (the App's client ID) and the AUTOMERGE_APP_PRIVATE_KEY
+# secret of a GitHub App are configured. The App needs the Contents, Pull
+# requests and Workflows repository permissions (read and write) and must be
+# installed on this repository. The repository setting "Allow auto-merge"
+# must also be on; without it, arming auto-merge fails.
+#
+# Why `pull_request_target` and a GitHub App token:
+# - Workflows triggered by Dependabot on `pull_request` run with a read-only
+#   token and see no repository secrets, so the App key would be unavailable.
+#   `pull_request_target` runs in the base-branch context with secrets. This
+#   is acceptable here because the job checks out nothing and executes
+#   nothing from the pull request; it only calls the GitHub API about the
+#   pull request, whose number is passed through an environment variable.
+# - A merge performed under the workflow's own GITHUB_TOKEN does not trigger
+#   other workflows, so main would get no CI, CodeQL or Scorecard run for the
+#   merge commit. Enabling auto-merge with the App token attributes the merge
+#   to the App and the push workflows fire as usual.
+
+on:
+  pull_request_target: # zizmor: ignore[dangerous-triggers] nothing from the pull request is checked out or executed; see above
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions: {}
+
+# One group per pull request: under pull_request_target github.ref is the base
+# branch, so grouping by ref would make the runs for different Dependabot pull
+# requests cancel each other while pending.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  enable-auto-merge:
+    name: Enable auto-merge
+    # Only Dependabot's own pull requests on this repository (not on forks);
+    # the App client ID variable doubles as the switch: unset it and this
+    # workflow is a no-op.
+    if: ${{ github.repository == 'hitoshyamamoto/irekey' && github.event.pull_request.user.login == 'dependabot[bot]' && vars.AUTOMERGE_APP_CLIENT_ID != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Mint GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          # client-id replaces the deprecated app-id input in this version.
+          client-id: ${{ vars.AUTOMERGE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.AUTOMERGE_APP_PRIVATE_KEY }}
+          # Without owner or repositories the token is scoped to this
+          # repository only. Request only what arming auto-merge needs instead
+          # of every permission the App installation has; the App must have
+          # been granted each of these, or minting the token fails.
+          permission-contents: write # the merge writes to main
+          permission-pull-requests: write # enable auto-merge on the pull request
+          # github-actions bumps change files under .github/workflows/.
+          # Verify: a merge armed by an App token is refused for such pull
+          # requests unless the token has this permission (GitHub docs,
+          # "Permissions required for GitHub Apps", Workflows).
+          permission-workflows: write
+
+      - name: Enable squash auto-merge
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: gh pr merge --auto --squash "${PR}" --repo "${GITHUB_REPOSITORY}"
