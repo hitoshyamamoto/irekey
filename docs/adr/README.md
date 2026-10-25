@@ -26,9 +26,7 @@ consequences. The format is MADR; see
 | [0016](0016-sshsig-bundle-signatures.md) | Sign bundles in the OpenSSH signature format (SSHSIG) | proposed |
 | [0017](0017-containerized-lab.md) | Simulate the fleet in containers; keep GPL simulators in their own images | proposed |
 | [0018](0018-release-process.md) | Release with a curated changelog and maintainer-signed tags | accepted |
+| [0019](0019-stable-error-code-registry.md) | Register stable error codes in one file and generate code and documentation from it | proposed |
 | [0020](0020-project-name-irekey.md) | Name the project irekey | accepted |
 | [0021](0021-descriptive-invariant-names.md) | Refer to safety invariants by descriptive names outside the specification | accepted |
 | [0022](0022-repository-guards-and-ci-checks.md) | Implement the repository guards and CI checks with these refinements | accepted |
-
-The number 0019 is reserved for the error-code registry, which is recorded
-together with its implementation.

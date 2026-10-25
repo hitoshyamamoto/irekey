@@ -20,3 +20,9 @@
 # Example:
 #
 #   golang.org/x/crypto BSD-3-Clause # SSH client and known_hosts parsing
+
+# go.yaml.in/yaml/v3 also ships an Apache-2.0 NOTICE file. It is not
+# distributed, because no binary links the module. go-licenses v2.0.1
+# classifies the module as MIT only, so check its notices by hand before any
+# binary links it.
+go.yaml.in/yaml/v3 MIT AND Apache-2.0 # YAML decoding of internal/errs/codes.yaml by the code generator and its tests; not linked into any binary
