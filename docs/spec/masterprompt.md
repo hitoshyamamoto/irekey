@@ -564,7 +564,7 @@ When a second developer appears (a second distinct `author` in the deployment re
 2. Connect. Show the host-key fingerprint (SHA256), hostname and MAC addresses; ask the human to confirm (trust on first use). Refuse identities already enrolled for another device (cloned images): `ID-003`.
 3. Discover facts with read-only commands run with `LC_ALL=C` (`/etc/os-release`, `uname -m`, `ip -j link` or `/sys/class/net/*/address`, `systemctl --version`, `docker compose version`, free space, inodes, clock). Never parse localized text.
 4. Discover components (Default heuristics, in order): Docker Compose projects (`docker compose ls --format json`; if the Docker socket is not accessible to the SSH account, record `compose: inaccessible` and ask the layout question instead; never escalate), systemd units with a `WorkingDirectory=` or `ExecStart=` under configured roots, git working trees under configured roots (default roots: `/opt`, `/srv`, `/home/*/apps`). Unknown layouts trigger one question; the answer is stored in the device file so it is never asked again.
-5. Snapshot without uploading anything: `find ... -printf` + `sha256sum` (coreutils) over discovered component paths, excluding `data_paths`, logs, caches, `node_modules`, `__pycache__`, `.venv`, `venv`, `*.pyc`, `.git/objects`. If the tools are missing, upload the executor to a temporary directory in the SSH account's home, run `irekey-exec scan` unprivileged, and remove it afterwards. Adoption never uses sudo and never writes outside that temporary directory.
+5. Snapshot without uploading anything: `find ... -printf` (findutils) + `sha256sum` (coreutils) over discovered component paths, excluding `data_paths`, logs, caches, `node_modules`, `__pycache__`, `.venv`, `venv`, `*.pyc`, `.git/objects`. If the tools are missing, upload the executor to a temporary directory in the SSH account's home, run `irekey-exec scan` unprivileged, and remove it afterwards. Adoption never uses sudo and never writes outside that temporary directory.
 6. Write `devices/<device>.yaml`, regenerate `known_hosts`, commit locally (the developer pushes and opens a merge request; adoption is a repository change like any other).
 7. Start background analysis (Section 10.4) and return. Adoption is complete when steps 1–6 succeed.
 
@@ -1302,7 +1302,7 @@ Not chosen: release-please (it creates tags with a bot identity, which conflicts
 
 - MIT for irekey code. Allowed dependency licenses (Default): MIT, BSD-2-Clause, BSD-3-Clause, Apache-2.0, ISC, MPL-2.0 (file-level copyleft; requires an ADR note when added). Anything else requires an ADR.
 - CI: `go install github.com/google/go-licenses/v2@<pinned>` then `go-licenses check ./... --allowed_licenses=...` (Verify flag names in the pinned version), and `go-licenses report` to generate `THIRD_PARTY_NOTICES` at release.
-- GPL software (the IEC 104 simulator) exists only inside a lab container image and is never a Go dependency (a guard checks `go.mod`).
+- GPL and AGPL software (the IEC 104 simulator, GPL-3.0; Vaultwarden, AGPL-3.0) exists only inside lab container images, runs as a separate process, and is never a Go dependency (a guard checks `go.mod`; ADR 0017).
 
 ---
 
@@ -1427,7 +1427,7 @@ Acceptance: all ⚠ scenarios pass; zero open `BUG-*` issues; release `v0.1.0` p
 - **A2** Components can be described by a manifest with common paths, runtime and health checks (precondition for plug-and-play).
 - **A3** Data written by components can live outside the release directories (`data_paths`).
 - **A4** Developers' machines have `git` installed (required only for patch operations).
-- **A5** Devices run systemd and an OpenSSH server; most have coreutils `find` and `sha256sum`.
+- **A5** Devices run systemd and an OpenSSH server; most have GNU `find` (findutils) and `sha256sum` (coreutils).
 
 ### 25.2 Open questions (keep in `docs/open-questions.md`; do not implement behavior that depends on them)
 
@@ -1445,6 +1445,7 @@ Acceptance: all ⚠ scenarios pass; zero open `BUG-*` issues; release `v0.1.0` p
 | Q10 | Confirm the pure-Go SQLite driver choice | 0013 |
 | Q11 | Does any existing tool already extract and manage per-customer patches across a fleet? (search terms: "fleet configuration management embedded", "per-customer patch management", "edge device GitOps offline") | positioning |
 | Q12 | cron-based guard fallback for devices without systemd | 11.6 |
+| Q13 | May the executor's health checks connect to the device's own services on loopback (http and tcp checks), given that the executor never initiates network connections? | 11.3, 11.8, executor dependency rule |
 
 ---
 
@@ -1473,7 +1474,7 @@ Terms are alphabetical. "Not:" lists confusions to avoid.
 - **extraction** — finding the nearest base and the delta of a device's component, split into hunks.
 - **failure budget** — maximum failed devices in a wave before it halts.
 - **forge** — a git hosting service with merge requests (GitLab, GitHub).
-- **gate** — a verification step V1–V6 (Section 10.6).
+- **gate** — a verification step that a change must pass before it reaches field devices: schema and graph checks, patch application, builds, simulation in the lab, the optional bench test, and the canary.
 - **graph** — the in-memory relation model used for impact, validity and provenance queries.
 - **group** — a reusable device selection without configuration. Not: wave.
 - **guard** — the persistent timer/service pair that rolls back an unconfirmed activation.

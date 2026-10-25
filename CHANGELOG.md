@@ -47,6 +47,17 @@ Added, Changed, Deprecated, Removed, Fixed and Security, as needed.
   answers in `.bestpractices.json`, funding metadata (`funding.json`,
   `.well-known/funding-manifest-urls`, `.github/FUNDING.yml`) and issue
   forms for bug reports and feature proposals.
+- ADRs 0002 to 0018, the founding architecture decisions, with their
+  sources (Go, the MIT license, push over SSH with nothing permanent on
+  devices, layers and patch stacks, release sets, the private deployment
+  repository, go-git and system git, in-process SSH, the persistent
+  confirmation guard, privilege through sudo, vault providers, SQLite for
+  local state, YAML with JSON Schema, the embedded web UI, SSHSIG bundle
+  signatures, the containerized lab, the release process).
+- `docs/open-questions.md`: the assumptions the design rests on and every
+  open question, with the behavior while it stays open.
+- `docs/glossary.md`, generated from the specification's glossary and
+  kept in sync by a test, which also rejects specification labels in it.
 
 ### Changed
 
@@ -57,6 +68,11 @@ Added, Changed, Deprecated, Removed, Fixed and Security, as needed.
 - Safety invariants are referred to by descriptive names (for example
   `DataSeparation`) in code, tests and public documentation, instead of
   by their numeric IDs. See ADR 0021.
+- Specification: the glossary entry for "gate" describes the gates in
+  words; `find` is attributed to findutils; a new open question asks
+  whether the executor's health checks may reach the device's own
+  services on loopback; AGPL software (Vaultwarden) gets the same
+  isolation as GPL software in the lab.
 
 ## Ideas on record
 
